@@ -6,6 +6,7 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.keys import Keys
 from pathlib import Path 
 from secrets import myUsername, myPassword, chromePath
 
@@ -47,8 +48,6 @@ edbuttonElement.click()
 
 time.sleep(15)
 
-print('woke')
-
 driver.switch_to.window(driver.window_handles[-1])
 phyButtonElm = WebDriverWait(driver, 20).until(lambda driver: driver.find_element_by_xpath(phyButton))
 econButtonElm = WebDriverWait(driver, 20).until(lambda driver: driver.find_element_by_xpath(econButton))
@@ -58,11 +57,8 @@ dragBarElm = WebDriverWait(driver, 20).until(lambda driver: driver.find_element_
 
 dragToElm = WebDriverWait(driver, 20).until(lambda driver: driver.find_element_by_xpath(dragTo))
 
-# dragToEleXOffset = dragToElm.location.get("x")
-# dragToEleYOffset = dragToElm.location.get("y")
-
-
 hover = ActionChains(driver).move_to_element(dragBarElm)
+
 def classSelect():
     while True:
         pickClass = input ("A) Physics" + '\n' + "B) Econ" + '\n' + "C) History" + '\n' + "D) English" + '\n' +"[a/b/c/d]? ")
@@ -125,8 +121,6 @@ def openCourse():
 def openTut():
     try:
         WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Tutorial')]"))).click() 
-        # //*[matches(@id, '.*Soup.*')]
-        # //span[contains(text(),'The Vietnam War: Tutorial')]
     
     except NoSuchElementException:
         print("Tutorial Not Found")
@@ -136,15 +130,67 @@ def openTut():
 
 def completeTut():
     try:
-        nextButtonElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='player-icon next']"))
-        nextButtonElm.click()
+        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next disabled']"))
+        print('is it disabled?')
+        driver.find_element_by_xpath("//button[@class='tutorial-nav-next disabled']")
 
     except NoSuchElementException:
-        print("Work to Be Done")
-    else:
+        print("nope")
+        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
         print("*Next*")
         completeTut()
+    else:
+        print("yes")
+        print("work to be done...")
+        time.sleep(2)
+        driver.switch_to.frame("content-iframe")
+        driver.switch_to.frame("mce_0_ifr")
+        print("scroll down")
+        page = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_tag_name("html"))
+        page.send_keys(Keys.END)
+        print("scrolled")
+        print("counting")
+        submitButtons = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_class_name("//sectionbtn buttonDone")) #counts buttons
+        totalSB = len(submitButtons)
+        print(totalSB)
+        
+        # print("checkingFRQ")
+        # isFRQ()
+        
+        # print("checkingMPC")
+        # isMPC()
+        
+def isFRQ():
+    try:
+        print('is it FRQ?')
+        # driver.switch_to.frame("content-iframe") 
+        # print("in frame")  
 
+        # driver.find_element_by_class_name("btn buttonDone")
+        # submitButtons = driver.find_element_by_class_name("btn buttonDone") #counts submit buttons on page
+        # totalSB = len(submitButtons)
+        # print(totalSB)
+
+
+
+        driver.find_element_by_id("tinymce")        
+    except NoSuchElementException:
+        print("nope")
+    else:
+        print("yes")
+        driver.switch_to.frame("mce_0_ifr")
+        totalFRQ = len(driver.find_elements_by_id("tinymce"))
+        print(totalFRQ)
+
+def isMPC():
+    driver.find_element_by_id("mcqChoices")
+    try:
+        print('is it MPC?')
+        driver.find_element_by_id("mcqChoices")
+    except NoSuchElementException:
+        print("nope")
+    else:
+        print("yes")
 
 
 classSelect()
@@ -156,3 +202,9 @@ openCourse()
 time.sleep(.5)
 
 openTut()
+
+print("sleep")
+time.sleep(2)
+print("awake")
+completeTut()
+print("done")
