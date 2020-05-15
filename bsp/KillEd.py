@@ -54,6 +54,9 @@ def getAssignments():
     return assignments
 
 def assignmentSelect(assignments): 
+    dragBar = "//div[@id='mCSB_2_dragger_vertical']//div[@class='mCSB_dragger_bar']"
+    dragBarElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(dragBar)) #Just to make sure page is loaded before looking for classes
+    
     theEntireAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
     theAvailableAlphabet = []
 
@@ -142,8 +145,8 @@ def completeTut():
             isFinished()
         except NoSuchElementException:
             print("not done")
-
-        completeTut()
+        else:
+            closeTut()
         
 def isFRQ():
     try:
@@ -164,23 +167,23 @@ def isFRQ():
 
         for x in count_arr:
             driver.switch_to.frame(x)
-            print("in")
+            # print("in")
             box1Elm = driver.find_element_by_id("tinymce").get_attribute("class")
-            print(box1Elm)
+            # print(box1Elm)
             answer = driver.find_element_by_xpath("//p")
             answer.send_keys('.')
             driver.switch_to.parent_frame()
-            print("out")
+            # print("out")
             if x == "mce_" + str(frameCount)+"_ifr":
                 break
 
         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_elements_by_xpath("//button[@class='btn buttonDone']"))
         count_button = [str(i) for i, x in enumerate(submitBtnElm, start=0)]
-        print(submitBtnElm)
-        print(count_button)
+        # print(submitBtnElm)
+        # print(count_button)
 
         for x in count_button:
-            print(int(x))
+            # print(int(x))
             int(x)
             try:
                 sleep(.5)
@@ -190,7 +193,7 @@ def isFRQ():
                 actions.move_to_element(submitBtnElm[int(x)]).perform()
                 driver.execute_script("arguments[0].scrollIntoView();", submitBtnElm[int(x)])
             except MoveTargetOutOfBoundsException:
-                print("Button in view")
+                # print("Button in view")
                 sleep(1)
                 submitBtnElm[int(x)].click()
                 sleep(1)
@@ -205,9 +208,13 @@ def isFRQ():
 def isMPC():
     try:
         print('is it MPC?')
-        driver.find_element_by_id("content-iframe")
+        print("looking for iframe")
+        driver.find_element_by_xpath('//iframe[@id="content-iframe"]') #issue in here for some reason it doesnt find the i frame causing the NoSuchElementException
+        print("switched to i frame")
         driver.switch_to.frame("content-iframe")
+        print("looking for mpqChoices")
         driver.find_element_by_id("mcqChoices")
+        print("finished all that jont")
     except NoSuchElementException:
         print("nope")
     else:
@@ -248,7 +255,11 @@ def isFinished():
         print("nope")
         
     else:
-        driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click()
+        print("Tutorial Complete")
+        l = 1
+
+def closeTut():
+    driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click()
 
 def main(): # this the real one bois
     driver.get("https://launchpad.classlink.com/loudoun")
@@ -291,11 +302,20 @@ def main(): # this the real one bois
 
     sleep(.5)
 
+    
+    l = 0
+
     openTut()
 
     sleep(2)
 
-    completeTut()
+    if l == 0:
+        sleep(.5)
+        print("doing tut")
+        completeTut()
+        print("looped")
+    else:
+        closeTut() 
 
     print("done")
 
