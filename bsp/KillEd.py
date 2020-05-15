@@ -51,16 +51,16 @@ userElement.send_keys(MY_USERNAME)
 passElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(passURL))
 passElement.send_keys(MY_PASSWORD)
 
-print("user/pass entered")
+logger.debug("user/pass entered")
 # sleep(1)
-print("signing in...")
+logger.debug("signing in...")
 
 buttonElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(buttonURL))
 buttonElement.click()
 
 edbuttonElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(edButtonURL))
 edbuttonElement.click()
-sleep(15)
+sleep(15) # we should really find a better way to do this but it works so eh
 
 driver.switch_to.window(driver.window_handles[-1]) # switch to edmentum tab
 logger.debug('collecting assignments')
@@ -84,11 +84,11 @@ assignments = getAssignments()
 def newClassSelect(assignments):
     i = 0
     for assignment in assignments:
-        print('[' + str(i) + '] ' + assignment['name'])
+        logger.debug('[' + str(i) + '] ' + assignment['name'])
         i += 1
         # TODO: remove newlines in this and actually build the selector
         # essentially ill switching from your button click to a direct link open (stored in assignments) and from there your system should work with it
-        print('if youre reading this aidan check my todo on line 89, also much love and muffins')
+    logger.warn('if youre reading this aidan check my todo on line 89, also much love and muffins')
 
 newClassSelect(assignments)
 
@@ -111,25 +111,25 @@ def classSelect():
             break
     # process the input
     if pickClass == "a": 
-        print ("opening physics...") 
+        logger.debug("opening physics...") 
         phyButtonElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(phyButton))
         phyButtonElm.click()
-        print("opened")
+        logger.debug("opened")
 
     elif pickClass == "b": 
-        print ("opening econ...")
+        logger.debug("opening econ...")
         econButtonElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(econButton))
         econButtonElm.click()
-        print("opened")
+        logger.debug("opened")
 
     elif pickClass == "c": 
-        print ("opening history...")
+        logger.debug("opening history...")
         webdriver.ActionChains(driver).drag_and_drop(dragBarElm,dragToElm).perform()
-        print("scrolled")
+        logger.debug("scrolled")
         sleep(.5)
         hisButtonElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(hisButton))
         hisButtonElm.click()
-        print("opened")
+        logger.debug("opened")
         
     elif pickClass == "d": 
         print ("opening english...")
