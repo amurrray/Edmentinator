@@ -1,7 +1,7 @@
 import logging
 from json import loads
 from pathlib import Path
-from secrets import MY_PASSWORDword, MY_USERNAME
+from secrets import MY_PASSWORD, MY_USERNAME
 from time import sleep
 
 from bs4 import BeautifulSoup
@@ -49,7 +49,7 @@ userElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element
 userElement.send_keys(MY_USERNAME)
 
 passElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(passURL))
-passElement.send_keys(MY_PASSWORDword)
+passElement.send_keys(MY_PASSWORD)
 
 print("user/pass entered")
 # sleep(1)

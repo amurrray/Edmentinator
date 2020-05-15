@@ -9,7 +9,7 @@ print (firstLink)
 
 browser.select_form('form[action="/login"]')
 browser["name"] = MY_USERNAME 
-browser["pass"] = MY_PASSWORDword
+browser["pass"] = MY_PASSWORD
 
 print('Logging In...' + '\n')
 
