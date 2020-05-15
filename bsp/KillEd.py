@@ -53,18 +53,27 @@ def getAssignments():
         assignments.append(assignment)
     return assignments
 
-def assignmentSelect(assignments):
+def assignmentSelect(assignments): 
+    theEntireAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
+    theAvailableAlphabet = #this var needs to be  theEntireAlphabet, but only the first (assignments),assignments being the total amount of classes found.
     i = 0
     for assignment in assignments:
-        print('[' + str(i) + '] ' + assignment['name'])
+        print('[' + theAvailableAlphabet[i] + '] ' + assignment['name'])
         i += 1
+    while True:
+        selectLet = input('Choose an assignment: ').upper()
+        if selectLet in theAvailableAlphabet:
+            break
+        else:
+            print("invalid character")
+    selection = theAvailableAlphabet.index(selectLet) 
 
-    selection = int(input('Choose an assignment: '))
     print('Chose ' + assignments[selection]['name'])
     driver.get(BASE_URL + assignments[selection]['url'])
     # TODO: remove newlines in this and actually build the selector
     # essentially ill switching from your button click to a direct link open (stored in assignments) and from there your system should work with it
     logger.warn('if youre reading this aidan check my todo on line 89, also much love and muffins')
+    logger.warn('okay thank you sulaiman, much love and scones')
 
 def openCourse():
     try:
@@ -131,9 +140,10 @@ def completeTut():
 def isFRQ():
     try:
         print('is it FRQ?')
+        driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
-        # driver.find_element_by_class_name("btn buttonDone")
-        driver.find_elements_by_xpath("//button[@class='btn buttonDone']")        
+        driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
+        driver.find_element_by_xpath('//iframe[@id="mce_0_ifr"]')
     except NoSuchElementException:
         print("nope")
     else:
@@ -181,11 +191,13 @@ def isFRQ():
                 
             if x == str(frameCount):
                 break
+        driver.switch_to.parent_frame()
         print("FRQ(s) Answered")
 
 def isMPC():
     try:
         print('is it MPC?')
+        driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
         driver.find_element_by_id("mcqChoices")
     except NoSuchElementException:
@@ -218,13 +230,15 @@ def isMPC():
 def isFinished():
     try:
         print("are we done?")
+        driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
         congrats = "//h1[contains(text(),'Congratulations!')]"
         driver.find_element_by_xpath(congrats)
         driver.switch_to.parent_frame()
         
     except NoSuchElementException:
-        print("lets hope no one ever has to see this")
+        print("nope")
+        
     else:
         driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click()
 
