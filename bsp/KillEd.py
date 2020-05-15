@@ -55,18 +55,25 @@ def getAssignments():
 
 def assignmentSelect(assignments): 
     theEntireAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
-    logger.error('\n'+'[HEY SULAIMAN LOOK AT ME!] hey soup, go to line 59 because you boutta get an error'+'\n')
-    #theAvailableAlphabet = #this var needs to be  theEntireAlphabet, but only the first (assignments),assignments being the total amount of classes found.
+    theAvailableAlphabet = []
+
+    i = 0
+    for x in theEntireAlphabet:
+        theAvailableAlphabet.append(theEntireAlphabet[i])
+        i += 1
+        if len(theAvailableAlphabet) == len(assignments):
+            break
+    
     i = 0
     for assignment in assignments:
-        print('[' + theAvailableAlphabet[i] + '] ' + assignment['name']) #also theres this weird bug where this sometimes doesnt go through
+        print('[' + theAvailableAlphabet[i] + '] ' + assignment['name']) #also theres this weird bug where this sometimes doesnt go through, if you run into it too maybe a webdriverwait somehwere in the getAssignments?
         i += 1
     while True:
         selectLet = input('Choose an assignment: ').upper()
         if selectLet in theAvailableAlphabet:
             break
         else:
-            print("invalid character")
+            print('\n'+"Error: Invalid Character")
     selection = theAvailableAlphabet.index(selectLet) 
 
     print('Chose ' + assignments[selection]['name'])
