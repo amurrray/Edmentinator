@@ -1,11 +1,18 @@
 import os
 import time
+import json
+import re
+from bs4 import BeautifulSoup  
+from slimit import ast  # $ pip install slimit
+from slimit.parser import Parser as JavascriptParser
+from slimit.visitors import nodevisitor
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions
 from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import MoveTargetOutOfBoundsException
 from selenium.webdriver.common.keys import Keys
 from pathlib import Path 
 from secrets import myUsername, myPassword, chromePath
@@ -39,6 +46,10 @@ userElement.send_keys(myUsername)
 
 passElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(passURL))
 passElement.send_keys(myPassword)
+
+print("user/pass entered")
+time.sleep(1)
+print("signing in...")
 
 buttonElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(buttonURL))
 buttonElement.click()
@@ -130,7 +141,6 @@ def openTut():
 
 def completeTut():
     try:
-        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next disabled']"))
         print('is it disabled?')
         driver.find_element_by_xpath("//button[@class='tutorial-nav-next disabled']")
 
@@ -138,59 +148,92 @@ def completeTut():
         print("nope")
         WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
         print("*Next*")
+        time.sleep(1)
         completeTut()
     else:
         print("yes")
         print("work to be done...")
         time.sleep(2)
-        driver.switch_to.frame("content-iframe")
-        driver.switch_to.frame("mce_0_ifr")
-        print("scroll down")
-        page = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_tag_name("html"))
-        page.send_keys(Keys.END)
-        print("scrolled")
-        print("counting")
-        submitButtons = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_class_name("//sectionbtn buttonDone")) #counts buttons
-        totalSB = len(submitButtons)
-        print(totalSB)
-        
-        # print("checkingFRQ")
-        # isFRQ()
-        
-        # print("checkingMPC")
-        # isMPC()
+        isFRQ()
+        isMPC()
         
 def isFRQ():
     try:
         print('is it FRQ?')
-        # driver.switch_to.frame("content-iframe") 
-        # print("in frame")  
-
-        # driver.find_element_by_class_name("btn buttonDone")
-        # submitButtons = driver.find_element_by_class_name("btn buttonDone") #counts submit buttons on page
-        # totalSB = len(submitButtons)
-        # print(totalSB)
-
-
-
         driver.find_element_by_id("tinymce")        
     except NoSuchElementException:
         print("nope")
     else:
         print("yes")
-        driver.switch_to.frame("mce_0_ifr")
-        totalFRQ = len(driver.find_elements_by_id("tinymce"))
-        print(totalFRQ)
+        driver.switch_to.frame("content-iframe")
+        frameArray = driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
+        frameCount = len(frameArray)
+        print(str(frameCount) + " FRQs Found")
+
+        count_arr = [str("mce_") + str(i) + str("_ifr") for i, x in enumerate(frameArray, start=0)]
+
+        for x in count_arr:
+            driver.switch_to.frame(x)
+            print("in")
+            box1Elm = driver.find_element_by_id("tinymce").get_attribute("class")
+            print(box1Elm)
+            answer = driver.find_element_by_xpath("//p")
+            answer.send_keys('.')
+            driver.switch_to.parent_frame()
+            print("out")
+            if x == "mce_" + str(frameCount)+"_ifr":
+                break
+
+        submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_elements_by_xpath("//button[@class='btn buttonDone']"))
+        count_button = [str(i) for i, x in enumerate(submitBtnElm, start=0)]
+        print(submitBtnElm)
+        print(count_button)
+
+        for x in count_button:
+            print(int(x))
+            int(x)
+            try:
+                body = driver.find_element_by_css_selector('body')
+                body.send_keys(Keys.PAGE_UP)
+                actions = ActionChains(driver)
+                actions.move_to_element(submitBtnElm[int(x)]).perform()
+                driver.execute_script("arguments[0].scrollIntoView();", submitBtnElm[int(x)])
+            except MoveTargetOutOfBoundsException:
+                print("Button in view")
+                time.sleep(1)
+                submitBtnElm[int(x)].click()
+                time.sleep(1)
+            else:
+                print("this shouldn't happen")
+                
+            if x == str(frameCount):
+                break
 
 def isMPC():
-    driver.find_element_by_id("mcqChoices")
     try:
         print('is it MPC?')
+        driver.switch_to.frame("content-iframe")
         driver.find_element_by_id("mcqChoices")
     except NoSuchElementException:
         print("nope")
     else:
         print("yes")
+        script = driver.find_element_by_xpath("//script[contains(.,'IsCorrect')]").get_attribute("innerHTML")
+        # print(script + '\n')
+        scriptElmCut = script[20:-2]
+        # print(scriptElmCut + '\n')
+        parsedScript = json.loads(scriptElmCut) 
+        theEntireNumabet = ['0', '1', '2', '3']
+        i = 0
+        for choice in parsedScript['Choices']: # this goes thru all the choices
+            if choice['IsCorrect']: # if the isCorrect bool is True, then the answer is correct
+                print('the answer is ' + theEntireNumabet[i])
+            i += 1
+        mpcAnsr = "'choice' + i"
+        print(mpcAnsr)
+        mpcBtn = browser.find_element_by_xpath(".//input[@type='radio' and @id='{}']").format(mpcAnsr)
+        mpcBtn.click()
+        
 
 
 classSelect()
@@ -202,9 +245,10 @@ openCourse()
 time.sleep(.5)
 
 openTut()
-
-print("sleep")
 time.sleep(2)
-print("awake")
 completeTut()
+
+
+
+
 print("done")
