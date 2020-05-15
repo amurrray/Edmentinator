@@ -148,24 +148,40 @@ def completeTut():
         print("nope")
         WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
         print("*Next*")
-        time.sleep(1)
+        time.sleep(.5)
         completeTut()
     else:
         print("yes")
         print("work to be done...")
         time.sleep(2)
-        isFRQ()
-        isMPC()
+  
+        try:
+            isFRQ()
+        except NoSuchElementException:
+            print("not FRQ")
+
+        try:
+            isMPC()
+        except NoSuchElementException:
+            print("not MPC")
+        
+        try:
+            isFinished()
+        except NoSuchElementException:
+            print("not done")
+
+        completeTut()
         
 def isFRQ():
     try:
         print('is it FRQ?')
-        driver.find_element_by_id("tinymce")        
+        driver.switch_to.frame("content-iframe")
+        # driver.find_element_by_class_name("btn buttonDone")
+        driver.find_elements_by_xpath("//button[@class='btn buttonDone']")        
     except NoSuchElementException:
         print("nope")
     else:
         print("yes")
-        driver.switch_to.frame("content-iframe")
         frameArray = driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
         frameCount = len(frameArray)
         print(str(frameCount) + " FRQs Found")
@@ -193,6 +209,7 @@ def isFRQ():
             print(int(x))
             int(x)
             try:
+                time.sleep(.5)
                 body = driver.find_element_by_css_selector('body')
                 body.send_keys(Keys.PAGE_UP)
                 actions = ActionChains(driver)
@@ -208,6 +225,7 @@ def isFRQ():
                 
             if x == str(frameCount):
                 break
+        print("FRQ(s) Answered")
 
 def isMPC():
     try:
@@ -228,12 +246,31 @@ def isMPC():
         for choice in parsedScript['Choices']: # this goes thru all the choices
             if choice['IsCorrect']: # if the isCorrect bool is True, then the answer is correct
                 print('the answer is ' + theEntireNumabet[i])
+                ans = theEntireNumabet[i]
             i += 1
-        mpcAnsr = "'choice' + i"
+            
+        mpcAnsr = 'choice' + ans
         print(mpcAnsr)
-        mpcBtn = browser.find_element_by_xpath(".//input[@type='radio' and @id='{}']").format(mpcAnsr)
-        mpcBtn.click()
+        mpcBtn = "\"//input[@id='" + mpcAnsr + "']\""
+        print(mpcBtn)
+        # mpcBtnElm = driver.find_element_by_xpath(mpcBtn)
+        mpcBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//input[@id='choice2']"))
+        mpcBtnElm.click()
+        driver.switch_to.parent_frame()
+        print("MPC answered")
+
+def isFinished():
+    try:
+        print("are we done?")
+        driver.switch_to.frame("content-iframe")
+        congrats = "//h1[contains(text(),'Congratulations!')]"
+        driver.find_element_by_xpath(congrats)
+        driver.switch_to.parent_frame()
         
+    except NoSuchElementException:
+        print("lets hope no one ever has to see this")
+    else:
+        driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click()
 
 
 classSelect()
@@ -245,10 +282,9 @@ openCourse()
 time.sleep(.5)
 
 openTut()
+
 time.sleep(2)
+
 completeTut()
-
-
-
 
 print("done")
