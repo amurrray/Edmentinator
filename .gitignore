@@ -106,3 +106,4 @@ keys.py
 .cache*
 
 bsp/secrets.py
+debug.log

@@ -1,5 +1,5 @@
 import mechanicalsoup
-from secrets import myUsername, myPassword
+from secrets import MY_USERNAME, MY_PASSWORDword
 
 browser = mechanicalsoup.StatefulBrowser()
 browser.open("https://www.coolmathgames.com/login")
@@ -8,8 +8,8 @@ firstLink = browser.get_url()
 print (firstLink)
 
 browser.select_form('form[action="/login"]')
-browser["name"] = myUsername 
-browser["pass"] = myPassword
+browser["name"] = MY_USERNAME 
+browser["pass"] = MY_PASSWORDword
 
 print('Logging In...' + '\n')
 

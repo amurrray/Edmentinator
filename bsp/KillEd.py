@@ -1,30 +1,34 @@
-import os
-import time
-import json
-import re
-from bs4 import BeautifulSoup  
-from slimit import ast  # $ pip install slimit
-from slimit.parser import Parser as JavascriptParser
-from slimit.visitors import nodevisitor
+import logging
+from json import loads
+from pathlib import Path
+from secrets import MY_PASSWORDword, MY_USERNAME
+from time import sleep
+
+from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import MoveTargetOutOfBoundsException, NoSuchElementException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions
-from selenium.common.exceptions import NoSuchElementException
-from selenium.common.exceptions import MoveTargetOutOfBoundsException
 from selenium.webdriver.common.keys import Keys
-from pathlib import Path 
-from secrets import myUsername, myPassword, chromePath
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.ui import WebDriverWait
+from slimit import ast
+from slimit.parser import Parser as JavascriptParser
+from slimit.visitors import nodevisitor
 
-chrome_options = webdriver.ChromeOptions()
-extensionPath = (str(Path(__file__).resolve().parents[0]) + r'\8.9_0.crx')
-chrome_options.add_extension(extensionPath)
-# print(balls) # D:\CodeProjects\VisualStudio repos\BeautifulSoupPractice\bsp\seleniumprac.py\8.9_0.crx
-# time.sleep(5)
-print('soup was here')
+# setup logging
+logging.basicConfig(level=logging.INFO, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
+logger = logging.getLogger('main')
+logger.setLevel(logging.DEBUG)
 
-driver = webdriver.Chrome(chromePath, chrome_options=chrome_options)
+# constants
+CHROME_PATH = str(Path(__file__).resolve().parents[0]) + '/chromedriver.exe'
+EXTENSION_PATH = str(Path(__file__).resolve().parents[0]) + '/8.9_0.crx'
+CHROME_OPTIONS = webdriver.ChromeOptions()
+CHROME_OPTIONS.add_extension(EXTENSION_PATH)
+logger.debug('soup was here')
+
+driver = webdriver.Chrome(CHROME_PATH, chrome_options=CHROME_OPTIONS)
 driver.get("https://launchpad.classlink.com/loudoun")
 
 userURL = "//input[@id='username']"
@@ -42,13 +46,13 @@ backButton = "//a[contains(text(),'Back to Home')]"
 
 
 userElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(userURL))
-userElement.send_keys(myUsername)
+userElement.send_keys(MY_USERNAME)
 
 passElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(passURL))
-passElement.send_keys(myPassword)
+passElement.send_keys(MY_PASSWORDword)
 
 print("user/pass entered")
-time.sleep(1)
+# sleep(1)
 print("signing in...")
 
 buttonElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(buttonURL))
@@ -56,10 +60,38 @@ buttonElement.click()
 
 edbuttonElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(edButtonURL))
 edbuttonElement.click()
+sleep(15)
 
-time.sleep(15)
+driver.switch_to.window(driver.window_handles[-1]) # switch to edmentum tab
+logger.debug('collecting assignments')
+# WebDriverWait(driver, 30).until(lambda driver: driver.find_element_by_class_name('assignment isotope-item'))
+def getAssignments():
+    page_source = driver.page_source
+    # driver.find_element_by_class_name('assignment isotope-item')
 
-driver.switch_to.window(driver.window_handles[-1])
+    soup = BeautifulSoup(page_source, 'lxml')
+    assignments = []
+    assignment_selector = soup.find_all('div', class_='assignment isotope-item')
+    for assignment_selector in assignment_selector:
+        name = assignment_selector.find('div', class_='assignmentName').get_text()
+        link = assignment_selector.find('a').get('href')
+        assignment = {"name": name, "link": link}
+        assignments.append(assignment)
+    return assignments
+
+assignments = getAssignments()
+
+def newClassSelect(assignments):
+    i = 0
+    for assignment in assignments:
+        print('[' + str(i) + '] ' + assignment['name'])
+        i += 1
+        # TODO: remove newlines in this and actually build the selector
+        # essentially ill switching from your button click to a direct link open (stored in assignments) and from there your system should work with it
+        print('if youre reading this aidan check my todo on line 89, also much love and muffins')
+
+newClassSelect(assignments)
+
 phyButtonElm = WebDriverWait(driver, 20).until(lambda driver: driver.find_element_by_xpath(phyButton))
 econButtonElm = WebDriverWait(driver, 20).until(lambda driver: driver.find_element_by_xpath(econButton))
 hisButtonElm = WebDriverWait(driver, 20).until(lambda driver: driver.find_element_by_xpath(hisButton))
@@ -94,7 +126,7 @@ def classSelect():
         print ("opening history...")
         webdriver.ActionChains(driver).drag_and_drop(dragBarElm,dragToElm).perform()
         print("scrolled")
-        time.sleep(.5)
+        sleep(.5)
         hisButtonElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(hisButton))
         hisButtonElm.click()
         print("opened")
@@ -103,19 +135,19 @@ def classSelect():
         print ("opening english...")
         webdriver.ActionChains(driver).drag_and_drop(dragBarElm,dragToElm).perform()
         print("scrolled")
-        time.sleep(.5)
+        sleep(.5)
         engButtonElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(engButton))
         engButtonElm.click()
         print("opened")
         
-    print("im in")
+    logger.debug("im in")
 
 def openCourse():
     try:
         WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[text()='0 of 2']"))).click()
 
     except NoSuchElementException:
-        print("no classes found")
+        logger.error("no classes found")
         while True:
             goBack = input ("Go Back and Pick New Class?" + '\n' + "[y/n]? ")
             if goBack in ['y', 'n']:
@@ -148,12 +180,12 @@ def completeTut():
         print("nope")
         WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
         print("*Next*")
-        time.sleep(.5)
+        sleep(.5)
         completeTut()
     else:
         print("yes")
         print("work to be done...")
-        time.sleep(2)
+        sleep(2)
   
         try:
             isFRQ()
@@ -209,7 +241,7 @@ def isFRQ():
             print(int(x))
             int(x)
             try:
-                time.sleep(.5)
+                sleep(.5)
                 body = driver.find_element_by_css_selector('body')
                 body.send_keys(Keys.PAGE_UP)
                 actions = ActionChains(driver)
@@ -217,9 +249,9 @@ def isFRQ():
                 driver.execute_script("arguments[0].scrollIntoView();", submitBtnElm[int(x)])
             except MoveTargetOutOfBoundsException:
                 print("Button in view")
-                time.sleep(1)
+                sleep(1)
                 submitBtnElm[int(x)].click()
-                time.sleep(1)
+                sleep(1)
             else:
                 print("this shouldn't happen")
                 
@@ -240,7 +272,7 @@ def isMPC():
         # print(script + '\n')
         scriptElmCut = script[20:-2]
         # print(scriptElmCut + '\n')
-        parsedScript = json.loads(scriptElmCut) 
+        parsedScript = loads(scriptElmCut) 
         theEntireNumabet = ['0', '1', '2', '3']
         i = 0
         for choice in parsedScript['Choices']: # this goes thru all the choices
@@ -275,15 +307,15 @@ def isFinished():
 
 classSelect()
 
-time.sleep(.5)
+sleep(.5)
 
 openCourse()
 
-time.sleep(.5)
+sleep(.5)
 
 openTut()
 
-time.sleep(2)
+sleep(2)
 
 completeTut()
 
