@@ -55,10 +55,11 @@ def getAssignments():
 
 def assignmentSelect(assignments): 
     theEntireAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
-    theAvailableAlphabet = #this var needs to be  theEntireAlphabet, but only the first (assignments),assignments being the total amount of classes found.
+    logger.error('\n'+'[HEY SULAIMAN LOOK AT ME!] hey soup, go to line 59 because you boutta get an error'+'\n')
+    #theAvailableAlphabet = #this var needs to be  theEntireAlphabet, but only the first (assignments),assignments being the total amount of classes found.
     i = 0
     for assignment in assignments:
-        print('[' + theAvailableAlphabet[i] + '] ' + assignment['name'])
+        print('[' + theAvailableAlphabet[i] + '] ' + assignment['name']) #also theres this weird bug where this sometimes doesnt go through
         i += 1
     while True:
         selectLet = input('Choose an assignment: ').upper()
