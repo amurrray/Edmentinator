@@ -154,40 +154,24 @@ def isFRQ():
         driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
 
     except NoSuchElementException:
-<<<<<<< HEAD
         logger.debug("nope")
-=======
-        driver.switch_to.parent_frame()
-        print("nope")
->>>>>>> a71c545db5baaa7357daf3d27c06a366747e01ca
     else:
         logger.debug("yes")
 
         frqFrames = driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
         logger.debug(str(len(frqFrames)) + " FRQs Found")
 
-<<<<<<< HEAD
         count_arr = [str("mce_") + str(i) + str("_ifr") for i, frqFrame in enumerate(frqFrames, start=0)]
         for frqFrame in count_arr:
             driver.switch_to.frame(frqFrame)
             print("in")
-=======
-        for x in count_arr:
-            driver.switch_to.frame(x)
-            # print("in micro iframe")
->>>>>>> a71c545db5baaa7357daf3d27c06a366747e01ca
             box1Elm = driver.find_element_by_id("tinymce").get_attribute("class")
             # print(box1Elm)
             answer = driver.find_element_by_xpath("//p")
             answer.send_keys('.')
             driver.switch_to.parent_frame()
-<<<<<<< HEAD
             print("out")
             if frqFrame == "mce_" + str(len(frqFrames)) + "_ifr": # check if we are on the last one
-=======
-            # print("out microiframe")
-            if x == "mce_" + str(frameCount)+"_ifr":
->>>>>>> a71c545db5baaa7357daf3d27c06a366747e01ca
                 break
 
         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_elements_by_xpath("//button[@class='btn buttonDone']"))
