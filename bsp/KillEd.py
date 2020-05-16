@@ -58,6 +58,9 @@ def getAssignments():
     return assignments
 
 def assignmentSelect(assignments): 
+    dragBar = "//div[@id='mCSB_2_dragger_vertical']//div[@class='mCSB_dragger_bar']"
+    dragBarElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(dragBar)) #Just to make sure page is loaded before looking for classes
+    
     theEntireAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
     theAvailableAlphabet = []
 
@@ -118,7 +121,7 @@ def completeTut():
         driver.find_element_by_xpath("//button[@class='tutorial-nav-next disabled']")
 
     except NoSuchElementException:
-        print("nope")
+        print("nada")
         WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
         print("*Next*")
         sleep(.5)
@@ -141,9 +144,7 @@ def completeTut():
         try:
             isFinished()
         except NoSuchElementException:
-            print("not done")
-
-        completeTut()
+            print("not finished")
         
 def isFRQ():
     try:
@@ -153,33 +154,49 @@ def isFRQ():
         driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
 
     except NoSuchElementException:
+<<<<<<< HEAD
         logger.debug("nope")
+=======
+        driver.switch_to.parent_frame()
+        print("nope")
+>>>>>>> a71c545db5baaa7357daf3d27c06a366747e01ca
     else:
         logger.debug("yes")
 
         frqFrames = driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
         logger.debug(str(len(frqFrames)) + " FRQs Found")
 
+<<<<<<< HEAD
         count_arr = [str("mce_") + str(i) + str("_ifr") for i, frqFrame in enumerate(frqFrames, start=0)]
         for frqFrame in count_arr:
             driver.switch_to.frame(frqFrame)
             print("in")
+=======
+        for x in count_arr:
+            driver.switch_to.frame(x)
+            # print("in micro iframe")
+>>>>>>> a71c545db5baaa7357daf3d27c06a366747e01ca
             box1Elm = driver.find_element_by_id("tinymce").get_attribute("class")
-            print(box1Elm)
+            # print(box1Elm)
             answer = driver.find_element_by_xpath("//p")
             answer.send_keys('.')
             driver.switch_to.parent_frame()
+<<<<<<< HEAD
             print("out")
             if frqFrame == "mce_" + str(len(frqFrames)) + "_ifr": # check if we are on the last one
+=======
+            # print("out microiframe")
+            if x == "mce_" + str(frameCount)+"_ifr":
+>>>>>>> a71c545db5baaa7357daf3d27c06a366747e01ca
                 break
 
         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_elements_by_xpath("//button[@class='btn buttonDone']"))
         count_button = [str(i) for i, x in enumerate(submitBtnElm, start=0)]
-        print(submitBtnElm)
-        print(count_button)
+        # print(submitBtnElm)
+        # print(count_button)
 
         for x in count_button:
-            print(int(x))
+            # print(int(x))
             int(x)
             try:
                 sleep(.5)
@@ -189,7 +206,7 @@ def isFRQ():
                 actions.move_to_element(submitBtnElm[int(x)]).perform()
                 driver.execute_script("arguments[0].scrollIntoView();", submitBtnElm[int(x)])
             except MoveTargetOutOfBoundsException:
-                print("Button in view")
+                # print("Button in view")
                 sleep(1)
                 submitBtnElm[int(x)].click()
                 sleep(1)
@@ -204,11 +221,16 @@ def isFRQ():
 def isMPC():
     try:
         print('is it MPC?')
+        print("looking for iframe")
         driver.find_element_by_id("content-iframe")
+        print("switched to i frame")
         driver.switch_to.frame("content-iframe")
+        print("looking for mpqChoices")
         driver.find_element_by_id("mcqChoices")
+        print("finished all that jont")
     except NoSuchElementException:
         print("nope")
+        driver.switch_to.parent_frame()
     else:
         print("yes")
         script = driver.find_element_by_xpath("//script[contains(.,'IsCorrect')]").get_attribute("innerHTML")
@@ -226,13 +248,15 @@ def isMPC():
             
         mpcAnsr = 'choice' + ans
         print(mpcAnsr)
-        mpcBtn = "\"//input[@id='" + mpcAnsr + "']\""
+        mpcBtn = "//input[@id=\'" + mpcAnsr + "\']"
+        # userURL = "//input[@id='username']"
         print(mpcBtn)
         # mpcBtnElm = driver.find_element_by_xpath(mpcBtn)
-        mpcBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//input[@id='choice2']"))
+        mpcBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(mpcBtn))
         mpcBtnElm.click()
         driver.switch_to.parent_frame()
         print("MPC answered")
+
 
 def isFinished():
     try:
@@ -247,7 +271,11 @@ def isFinished():
         print("nope")
         
     else:
-        driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click()
+        print("Tutorial Complete")
+        driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click() #closes tutorial
+        i = 69
+
+
 
 def main(): # this the real one bois
     driver.get("https://launchpad.classlink.com/loudoun")
@@ -294,8 +322,12 @@ def main(): # this the real one bois
 
     sleep(2)
 
-    completeTut()
-
-    print("done")
+    i=0
+    while True:
+        completeTut()
+        driver.switch_to.parent_frame()
+        if i == 69:
+            break
 
 main()
+print("poggers")
