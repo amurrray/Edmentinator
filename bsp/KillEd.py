@@ -1,4 +1,5 @@
 import logging
+import os
 from json import loads
 from pathlib import Path
 from secrets import MY_PASSWORD, MY_USERNAME
@@ -22,7 +23,10 @@ logger = logging.getLogger('main')
 logger.setLevel(logging.DEBUG)
 
 # constants
-CHROME_PATH = str(Path(__file__).resolve().parents[0]) + '/chromedriver.exe'
+if os.name == 'nt':
+    CHROME_PATH = str(Path(__file__).resolve().parents[0]) + '/chromedriver.exe'
+else:
+    CHROME_PATH = str(Path(__file__).resolve().parents[0]) + '/chromedriver'
 EXTENSION_PATH = str(Path(__file__).resolve().parents[0]) + '/8.9_0.crx'
 CHROME_OPTIONS = webdriver.ChromeOptions()
 CHROME_OPTIONS.add_extension(EXTENSION_PATH)
@@ -30,7 +34,7 @@ BASE_URL = "https://f2.app.edmentum.com/"
 DEBUG = True
 logger.debug('soup was here')
 
-driver = webdriver.Chrome(CHROME_PATH, chrome_options=CHROME_OPTIONS)
+driver = webdriver.Chrome(CHROME_PATH, options=CHROME_OPTIONS)
 assignments = None # placeholder because i bad code flow
 
 def getAssignments():
@@ -78,10 +82,6 @@ def assignmentSelect(assignments):
 
     print('Chose ' + assignments[selection]['name'])
     driver.get(BASE_URL + assignments[selection]['url'])
-    # TODO: remove newlines in this and actually build the selector
-    # essentially ill switching from your button click to a direct link open (stored in assignments) and from there your system should work with it
-    logger.warn('if youre reading this aidan check my todo on line 89, also much love and muffins')
-    logger.warn('okay thank you sulaiman, much love and scones')
 
 def openCourse():
     try:
@@ -147,23 +147,22 @@ def completeTut():
         
 def isFRQ():
     try:
-        print('is it FRQ?')
+        logger.debug('is it FRQ?')
         driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
         driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
-        driver.find_element_by_xpath('//iframe[@id="mce_0_ifr"]')
+
     except NoSuchElementException:
-        print("nope")
+        logger.debug("nope")
     else:
-        print("yes")
-        frameArray = driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
-        frameCount = len(frameArray)
-        print(str(frameCount) + " FRQs Found")
+        logger.debug("yes")
 
-        count_arr = [str("mce_") + str(i) + str("_ifr") for i, x in enumerate(frameArray, start=0)]
+        frqFrames = driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
+        logger.debug(str(len(frqFrames)) + " FRQs Found")
 
-        for x in count_arr:
-            driver.switch_to.frame(x)
+        count_arr = [str("mce_") + str(i) + str("_ifr") for i, frqFrame in enumerate(frqFrames, start=0)]
+        for frqFrame in count_arr:
+            driver.switch_to.frame(frqFrame)
             print("in")
             box1Elm = driver.find_element_by_id("tinymce").get_attribute("class")
             print(box1Elm)
@@ -171,7 +170,7 @@ def isFRQ():
             answer.send_keys('.')
             driver.switch_to.parent_frame()
             print("out")
-            if x == "mce_" + str(frameCount)+"_ifr":
+            if frqFrame == "mce_" + str(len(frqFrames)) + "_ifr": # check if we are on the last one
                 break
 
         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_elements_by_xpath("//button[@class='btn buttonDone']"))
@@ -197,8 +196,8 @@ def isFRQ():
             else:
                 print("this shouldn't happen")
                 
-            if x == str(frameCount):
-                break
+            # if x == str(frameCount):
+            #     break
         driver.switch_to.parent_frame()
         print("FRQ(s) Answered")
 
