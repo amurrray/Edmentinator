@@ -129,28 +129,23 @@ def completeTut():
     else:
         print("yes")
         print("work to be done...")
-        sleep(2)
-  
-        try:
-            isFRQ()
-        except NoSuchElementException:
-            print("not FRQ")
-
-        try:
-            isMPC()
-        except NoSuchElementException:
-            print("not MPC")
         
-        try:
-            isFinished()
-        except NoSuchElementException:
-            print("not finished")
+        sleep(.5)
+
+        isFRQ()
+
+        isMPC()
+
+        isFinished()
+
         
 def isFRQ():
+    
     try:
         logger.debug('is it FRQ?')
         driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
+        print("switched to frame")
         driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
 
     except NoSuchElementException:
@@ -160,17 +155,38 @@ def isFRQ():
 
         frqFrames = driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
         logger.debug(str(len(frqFrames)) + " FRQs Found")
-
+        
+        if len(frqFrames) == 0:
+            driver.switch_to.parent_frame()
+            return
+        
         count_arr = [str("mce_") + str(i) + str("_ifr") for i, frqFrame in enumerate(frqFrames, start=0)]
         for frqFrame in count_arr:
             driver.switch_to.frame(frqFrame)
             print("in")
-            box1Elm = driver.find_element_by_id("tinymce").get_attribute("class")
+            # box1Elm = driver.find_element_by_id("tinymce").get_attribute("class")
             # print(box1Elm)
-            answer = driver.find_element_by_xpath("//p")
-            answer.send_keys('.')
-            driver.switch_to.parent_frame()
-            print("out")
+
+            # try statement to figure out if it chart or not
+            try:
+                driver.find_elements_by_xpath('//table[@=class="ed border-on padding-5 k-table mce-item-table"]')
+            except NoSuchElementException:
+                try:
+                    driver.find_element_by_xpath("//p")
+                except NoSuchElementException:
+                    logger.error("Cant find frq textbox or chart")
+                else:
+                    answer = driver.find_element_by_xpath("//p")
+                    answer.send_keys('.')
+                    driver.switch_to.parent_frame()
+            else:
+                logger.warn("chart detected, this has not really been set up yet")
+                webTable = driver.find_element_by_xpath('//table[@=class="ed border-on padding-5 k-table mce-item-table"]')
+                print(webTable)
+                def __init__(self, webTable):
+                    self.table = webTable
+                    print(webTable)
+
             if frqFrame == "mce_" + str(len(frqFrames)) + "_ifr": # check if we are on the last one
                 break
 
@@ -205,13 +221,13 @@ def isFRQ():
 def isMPC():
     try:
         print('is it MPC?')
-        print("looking for iframe")
+        # print("looking for iframe")
         driver.find_element_by_id("content-iframe")
         print("switched to i frame")
         driver.switch_to.frame("content-iframe")
-        print("looking for mpqChoices")
+        # print("looking for mpqChoices")
         driver.find_element_by_id("mcqChoices")
-        print("finished all that jont")
+        # print("finished all that jont")
     except NoSuchElementException:
         print("nope")
         driver.switch_to.parent_frame()
@@ -241,6 +257,19 @@ def isMPC():
         driver.switch_to.parent_frame()
         print("MPC answered")
 
+def isChart():
+    try:
+        print("is it Chart?")
+        driver.find_element_by_id("content-iframe")
+        driver.switch_to.frame("content-iframe")
+        frqFrames = driver.find_elements_by_xpath('//div[@role="toolbar" and @class="mce-container mce-toolbar mce-first mce-last mce-stack-layout-item"]')
+        logger.debug(str(len(frqFrames)) + " Boxes Found")
+
+    except NoSuchElementException:
+        print("No sir.")
+        driver.switch_to.parent_frame()
+    else:
+        pass
 
 def isFinished():
     try:
