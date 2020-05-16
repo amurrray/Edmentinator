@@ -121,7 +121,7 @@ def completeTut():
         driver.find_element_by_xpath("//button[@class='tutorial-nav-next disabled']")
 
     except NoSuchElementException:
-        print("nope")
+        print("nada")
         WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
         print("*Next*")
         sleep(.5)
@@ -144,9 +144,7 @@ def completeTut():
         try:
             isFinished()
         except NoSuchElementException:
-            print("not done")
-        else:
-            closeTut()
+            print("not finished")
         
 def isFRQ():
     try:
@@ -156,6 +154,7 @@ def isFRQ():
         driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
         driver.find_element_by_xpath('//iframe[@id="mce_0_ifr"]')
     except NoSuchElementException:
+        driver.switch_to.parent_frame()
         print("nope")
     else:
         print("yes")
@@ -167,13 +166,13 @@ def isFRQ():
 
         for x in count_arr:
             driver.switch_to.frame(x)
-            # print("in")
+            # print("in micro iframe")
             box1Elm = driver.find_element_by_id("tinymce").get_attribute("class")
             # print(box1Elm)
             answer = driver.find_element_by_xpath("//p")
             answer.send_keys('.')
             driver.switch_to.parent_frame()
-            # print("out")
+            # print("out microiframe")
             if x == "mce_" + str(frameCount)+"_ifr":
                 break
 
@@ -209,7 +208,7 @@ def isMPC():
     try:
         print('is it MPC?')
         print("looking for iframe")
-        driver.find_element_by_xpath('//iframe[@id="content-iframe"]') #issue in here for some reason it doesnt find the i frame causing the NoSuchElementException
+        driver.find_element_by_id("content-iframe")
         print("switched to i frame")
         driver.switch_to.frame("content-iframe")
         print("looking for mpqChoices")
@@ -217,6 +216,7 @@ def isMPC():
         print("finished all that jont")
     except NoSuchElementException:
         print("nope")
+        driver.switch_to.parent_frame()
     else:
         print("yes")
         script = driver.find_element_by_xpath("//script[contains(.,'IsCorrect')]").get_attribute("innerHTML")
@@ -234,13 +234,15 @@ def isMPC():
             
         mpcAnsr = 'choice' + ans
         print(mpcAnsr)
-        mpcBtn = "\"//input[@id='" + mpcAnsr + "']\""
+        mpcBtn = "//input[@id=\'" + mpcAnsr + "\']"
+        # userURL = "//input[@id='username']"
         print(mpcBtn)
         # mpcBtnElm = driver.find_element_by_xpath(mpcBtn)
-        mpcBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//input[@id='choice2']"))
+        mpcBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(mpcBtn))
         mpcBtnElm.click()
         driver.switch_to.parent_frame()
         print("MPC answered")
+
 
 def isFinished():
     try:
@@ -256,10 +258,10 @@ def isFinished():
         
     else:
         print("Tutorial Complete")
-        l = 1
+        driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click() #closes tutorial
+        i = 69
 
-def closeTut():
-    driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click()
+
 
 def main(): # this the real one bois
     driver.get("https://launchpad.classlink.com/loudoun")
@@ -302,21 +304,16 @@ def main(): # this the real one bois
 
     sleep(.5)
 
-    
-    l = 0
-
     openTut()
 
     sleep(2)
 
-    if l == 0:
-        sleep(.5)
-        print("doing tut")
+    i=0
+    while True:
         completeTut()
-        print("looped")
-    else:
-        closeTut() 
-
-    print("done")
+        driver.switch_to.parent_frame()
+        if i == 69:
+            break
 
 main()
+print("poggers")
