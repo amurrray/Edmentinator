@@ -35,12 +35,12 @@ DEBUG = True
 logger.debug('soup was here')
 
 driver = webdriver.Chrome(CHROME_PATH, options=CHROME_OPTIONS)
+actions = ActionChains(driver)
 assignments = None # placeholder because i bad code flow
 
 def getAssignments():
     page_source = driver.page_source
-    # driver.find_element_by_class_name('assignment isotope-item')
-
+    
     soup = BeautifulSoup(page_source, 'lxml')
     assignments = []
     assignment_selector = soup.find_all('div', class_='assignment isotope-item')
@@ -57,10 +57,10 @@ def getAssignments():
         assignments.append(assignment)
     return assignments
 
-def assignmentSelect(assignments): 
-    dragBar = "//div[@id='mCSB_2_dragger_vertical']//div[@class='mCSB_dragger_bar']"
-    dragBarElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(dragBar)) #Just to make sure page is loaded before looking for classes
-    
+def assignmentSelect(assignments):
+    WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_class_name('activeAssignments')) #Just to make sure page is loaded before looking for classes
+    sleep(.3)
+
     theEntireAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
     theAvailableAlphabet = []
 
@@ -75,6 +75,7 @@ def assignmentSelect(assignments):
     for assignment in assignments:
         print('[' + theAvailableAlphabet[i] + '] ' + assignment['name']) #also theres this weird bug where this sometimes doesnt go through, if you run into it too maybe a webdriverwait somehwere in the getAssignments?
         i += 1
+
     while True:
         selectLet = input('Choose an assignment: ').upper()
         if selectLet in theAvailableAlphabet:
@@ -190,28 +191,27 @@ def isFRQ():
             if frqFrame == "mce_" + str(len(frqFrames)) + "_ifr": # check if we are on the last one
                 break
 
-        submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_elements_by_xpath("//button[@class='btn buttonDone']"))
-        count_button = [str(i) for i, x in enumerate(submitBtnElm, start=0)]
-        # print(submitBtnElm)
-        # print(count_button)
+        # submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_elements_by_xpath("//button[@class='btn buttonDone']"))
+        # count_button = [str(i) for i, x in enumerate(submitBtnElm, start=0)]
+        # # print(submitBtnElm)
+        # # print(count_button)
 
-        for x in count_button:
-            # print(int(x))
-            int(x)
-            try:
-                sleep(.5)
-                body = driver.find_element_by_css_selector('body')
-                body.send_keys(Keys.PAGE_UP)
-                actions = ActionChains(driver)
-                actions.move_to_element(submitBtnElm[int(x)]).perform()
-                driver.execute_script("arguments[0].scrollIntoView();", submitBtnElm[int(x)])
-            except MoveTargetOutOfBoundsException:
-                # print("Button in view")
-                sleep(1)
-                submitBtnElm[int(x)].click()
-                sleep(1)
-            else:
-                print("this shouldn't happen")
+        # for x in count_button:
+        #     try:
+        #         sleep(.5)
+        #         driver.switch_to.parent_frame()
+        #         # body = driver.find_element_by_css_selector('body')
+        #         # body.send_keys(Keys.PAGE_UP)
+                
+        #         actions.move_to_element_with_offset(submitBtnElm[int(x)], 0, 100).perform()
+        #         # driver.execute_script("arguments[0].scrollIntoView();", submitBtnElm[int(x)])
+        #     except MoveTargetOutOfBoundsException:
+        #         # print("Button in view")
+        #         sleep(1)
+        #         submitBtnElm[int(x)].click()
+        #         sleep(1)
+        #     else:
+        #         print("this shouldn't happen")
                 
             # if x == str(frameCount):
             #     break
