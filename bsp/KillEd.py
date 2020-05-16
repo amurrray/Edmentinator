@@ -27,7 +27,7 @@ if os.name == 'nt':
     CHROME_PATH = str(Path(__file__).resolve().parents[0]) + '/chromedriver.exe'
 else:
     CHROME_PATH = str(Path(__file__).resolve().parents[0]) + '/chromedriver'
-EXTENSION_PATH = str(Path(__file__).resolve().parents[0]) + '/8.9_0.crx'
+EXTENSION_PATH = str(Path(__file__).resolve().parents[0]) + '/classlink.crx'
 CHROME_OPTIONS = webdriver.ChromeOptions()
 CHROME_OPTIONS.add_extension(EXTENSION_PATH)
 BASE_URL = "https://f2.app.edmentum.com/"
