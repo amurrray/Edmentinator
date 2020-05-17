@@ -38,6 +38,82 @@ driver = webdriver.Chrome(CHROME_PATH, options=CHROME_OPTIONS)
 actions = ActionChains(driver)
 assignments = None # placeholder because i bad code flow
 
+class TableThings:
+    def __init__(self, webtable):
+        self.table = webtable
+
+    def get_row_count(self):
+        return len(self.table.find_elements_by_tag_name("tr")) - 1
+
+    def get_column_count(self):
+        return len(self.table.find_elements_by_xpath("//tr[2]/th"))
+
+    def get_table_size(self):
+        return {"rows": self.get_row_count(),
+                "columns": self.get_column_count()}
+
+    def row_data(self, row_number):
+        if(row_number == 0):
+            raise Exception("Row number starts from 1")
+        row_number = row_number + 1
+        row = self.table.find_elements_by_xpath("//tr["+str(row_number)+"]/th")
+        rData = []
+        for webElement in row :
+            rData.append(webElement.text)
+        return rData
+
+    def column_data(self, column_number):
+        col = self.table.find_elements_by_xpath("//tr/th["+str(column_number)+"]")
+        rData = []
+        for webElement in col :
+            rData.append(webElement.text)
+        return rData
+
+    def get_all_data(self):
+        # get number of rows
+        noOfRows = len(self.table.find_elements_by_xpath("//tr")) -1
+        print("noOfRows: " + str(noOfRows))
+        # get number of columns
+        noOfColumns = len(self.table.find_elements_by_xpath("//tr[2]/th"))
+        print("noOfColumns: " + str(noOfColumns))
+        allData = []
+        # iterate over the rows, to ignore the headers we have started the i with '1'
+        for i in range(2, noOfRows+2):
+            # reset the row data every time
+            ro = []
+            # iterate over columns
+            for j in range(1, noOfColumns+1) :
+                # get text from the i th row and j th column
+                try:
+                    thPath = "//tr["+str(i)+"]/th["+str(j)+"]"
+                    tdPath = "//tr["+str(i)+"]/td["+str(j)+"]"
+                    ro.append(self.table.find_element_by_xpath(thPath).text)
+                    print(str(thPath)+" found")
+                except NoSuchElementException:
+                    print("//th not found, looking for //td")
+                    ro.append(self.table.find_element_by_xpath(tdPath).text)
+                    print(str(tdPath)+"found")
+            # add the row data to allData of the self.table
+            print("i =" + str(i))
+            allData.append(ro)
+
+        return allData
+
+    def presence_of_data(self, data):
+        # verify the data by getting the size of the element matches based on the text/data passed
+        dataSize = len(self.table.find_elements_by_xpath("//th[normalize-space(text())='"+data+"']"))
+        presence = False
+        if(dataSize > 0):
+            presence = True
+        return presence
+
+    def get_cell_data(self, row_number, column_number):
+        if(row_number == 0):
+            raise Exception("Row number starts from 1")
+        row_number = row_number+1
+        cellData = table.find_element_by_xpath("//tr["+str(row_number)+"]/th["+str(column_number)+"]").text
+        return cellData
+
 def getAssignments():
     page_source = driver.page_source
     
@@ -138,8 +214,8 @@ def completeTut():
         isMPC()
 
         isFinished()
+      
 
-        
 def isFRQ():
     
     try:
@@ -147,6 +223,16 @@ def isFRQ():
         driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
         print("switched to frame")
+        try:  #grabs char answer 
+            tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table']")
+            # scrollButton = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
+            # driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", scrollButton)
+            # print("scrolled")
+            AnswerTable = TableThings(tableAnswerElm).get_all_data()
+            
+        except NoSuchElementException:
+            logger.log("no table answer saved")
+            return
         driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
 
     except NoSuchElementException:
@@ -162,59 +248,66 @@ def isFRQ():
             return
         
         count_arr = [str("mce_") + str(i) + str("_ifr") for i, frqFrame in enumerate(frqFrames, start=0)]
+        print("found iframes: " + str(count_arr))
         for frqFrame in count_arr:
             driver.switch_to.frame(frqFrame)
-            print("in")
+            print("in " + frqFrame)
             # box1Elm = driver.find_element_by_id("tinymce").get_attribute("class")
             # print(box1Elm)
 
             # try statement to figure out if it chart or not
             try:
-                driver.find_elements_by_xpath('//table[@=class="ed border-on padding-5 k-table mce-item-table"]')
+                print("tabel?")
+                driver.find_elements_by_xpath('//table[@class="ed border-on padding-5 k-table mce-item-table"]')
+                
             except NoSuchElementException:
                 try:
+                    print("\n" + "Not Tabel")
                     driver.find_element_by_xpath("//p")
                 except NoSuchElementException:
                     logger.error("Cant find frq textbox or chart")
                 else:
+                    print("normal frq")
                     answer = driver.find_element_by_xpath("//p")
+                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", answer)
                     answer.send_keys('.')
+                    print("switching frame")
                     driver.switch_to.parent_frame()
+                    try:
+                        print("looking for btn")
+                        driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']")
+                    except NoSuchElementException:
+                        print("all buttons pressed, hopefully")
+                    else:
+                        print("found btn")
+                        submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
+                        print("scroll to btn")
+                        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
+                        submitBtnElm.click()
             else:
-                logger.warn("chart detected, this has not really been set up yet")
-                webTable = driver.find_element_by_xpath('//table[@=class="ed border-on padding-5 k-table mce-item-table"]')
-                print(webTable)
-                def __init__(self, webTable):
-                    self.table = webTable
-                    print(webTable)
+                print("yeppa")           
+                tableElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table mce-item-table']"))
+                # print(tableElm)
+                tableElmClass = tableElm.get_attribute("class")
+                print(tableElmClass)
+                #What the Fuck!
+                TableData = TableThings(tableElm).get_all_data()
+                print("Question Table: " + str(TableData))
+                print("AnserTable: " + str(AnswerTable))
+                # print(AnswerTable)
 
-            if frqFrame == "mce_" + str(len(frqFrames)) + "_ifr": # check if we are on the last one
+
+
+
+                
+                # print(allData + '\n')
+
+
+            submittedArray = driver.find_elements_by_xpath("//button[@class='btn buttonDone' and @style='display: none;']")
+
+            if len(frqFrame) == len(submittedArray): # check if we are on the last one
                 break
-
-        # submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_elements_by_xpath("//button[@class='btn buttonDone']"))
-        # count_button = [str(i) for i, x in enumerate(submitBtnElm, start=0)]
-        # # print(submitBtnElm)
-        # # print(count_button)
-
-        # for x in count_button:
-        #     try:
-        #         sleep(.5)
-        #         driver.switch_to.parent_frame()
-        #         # body = driver.find_element_by_css_selector('body')
-        #         # body.send_keys(Keys.PAGE_UP)
-                
-        #         actions.move_to_element_with_offset(submitBtnElm[int(x)], 0, 100).perform()
-        #         # driver.execute_script("arguments[0].scrollIntoView();", submitBtnElm[int(x)])
-        #     except MoveTargetOutOfBoundsException:
-        #         # print("Button in view")
-        #         sleep(1)
-        #         submitBtnElm[int(x)].click()
-        #         sleep(1)
-        #     else:
-        #         print("this shouldn't happen")
-                
-            # if x == str(frameCount):
-            #     break
+        
         driver.switch_to.parent_frame()
         print("FRQ(s) Answered")
 
@@ -287,8 +380,6 @@ def isFinished():
         print("Tutorial Complete")
         driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click() #closes tutorial
         i = 69
-
-
 
 def main(): # this the real one bois
     driver.get("https://launchpad.classlink.com/loudoun")
