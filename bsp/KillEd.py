@@ -72,10 +72,10 @@ class TableThings:
     def get_all_data(self):
         # get number of rows
         noOfRows = len(self.table.find_elements_by_xpath("//tr")) -1
-        print("noOfRows: " + str(noOfRows))
+        # print("noOfRows: " + str(noOfRows))
         # get number of columns
         noOfColumns = len(self.table.find_elements_by_xpath("//tr[2]/th"))
-        print("noOfColumns: " + str(noOfColumns))
+        # print("noOfColumns: " + str(noOfColumns))
         allData = []
         # iterate over the rows, to ignore the headers we have started the i with '1'
         for i in range(2, noOfRows+2):
@@ -88,13 +88,13 @@ class TableThings:
                     thPath = "//tr["+str(i)+"]/th["+str(j)+"]"
                     tdPath = "//tr["+str(i)+"]/td["+str(j)+"]"
                     ro.append(self.table.find_element_by_xpath(thPath).text)
-                    print(str(thPath)+" found")
+                    # print(str(thPath)+" found")
                 except NoSuchElementException:
-                    print("//th not found, looking for //td")
+                    # print("//th not found, looking for //td")
                     ro.append(self.table.find_element_by_xpath(tdPath).text)
                     print(str(tdPath)+"found")
             # add the row data to allData of the self.table
-            print("i =" + str(i))
+            # print("i =" + str(i))
             allData.append(ro)
 
         return allData
@@ -213,6 +213,8 @@ def completeTut():
 
         isMPC()
 
+        isDrag()
+
         isFinished()
       
 
@@ -223,16 +225,6 @@ def isFRQ():
         driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
         print("switched to frame")
-        try:  #grabs char answer 
-            tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table']")
-            # scrollButton = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
-            # driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", scrollButton)
-            # print("scrolled")
-            AnswerTable = TableThings(tableAnswerElm).get_all_data()
-            
-        except NoSuchElementException:
-            logger.log("no table answer saved")
-            return
         driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
 
     except NoSuchElementException:
@@ -250,6 +242,14 @@ def isFRQ():
         count_arr = [str("mce_") + str(i) + str("_ifr") for i, frqFrame in enumerate(frqFrames, start=0)]
         print("found iframes: " + str(count_arr))
         for frqFrame in count_arr:
+            try:  #grabs chart answer 
+                print("looking for table ans")
+                tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table']") #gets answer table
+                AnswerTable = TableThings(tableAnswerElm).get_all_data()    
+            except NoSuchElementException:
+                logger.log("no table answer saved")
+                return
+
             driver.switch_to.frame(frqFrame)
             print("in " + frqFrame)
             # box1Elm = driver.find_element_by_id("tinymce").get_attribute("class")
@@ -257,12 +257,11 @@ def isFRQ():
 
             # try statement to figure out if it chart or not
             try:
-                print("tabel?")
-                driver.find_elements_by_xpath('//table[@class="ed border-on padding-5 k-table mce-item-table"]')
-                
+                print("table?")
+                driver.find_element_by_xpath('//table[@class="ed border-on padding-5 k-table mce-item-table"]')   
             except NoSuchElementException:
                 try:
-                    print("\n" + "Not Tabel")
+                    print("\n" + "Not Table")
                     driver.find_element_by_xpath("//p")
                 except NoSuchElementException:
                     logger.error("Cant find frq textbox or chart")
@@ -270,7 +269,7 @@ def isFRQ():
                     print("normal frq")
                     answer = driver.find_element_by_xpath("//p")
                     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", answer)
-                    answer.send_keys('.')
+                    answer.send_keys('.') #REPLACE WITH VAR TO ANSWER
                     print("switching frame")
                     driver.switch_to.parent_frame()
                     try:
@@ -284,6 +283,7 @@ def isFRQ():
                         print("scroll to btn")
                         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
                         submitBtnElm.click()
+                        sleep(.5)
             else:
                 print("yeppa")           
                 tableElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table mce-item-table']"))
@@ -292,15 +292,35 @@ def isFRQ():
                 print(tableElmClass)
                 #What the Fuck!
                 TableData = TableThings(tableElm).get_all_data()
+
                 print("Question Table: " + str(TableData))
                 print("AnserTable: " + str(AnswerTable))
                 # print(AnswerTable)
 
+                columnNUM = TableThings(tableElm).get_column_count()
+                print("# of Columns: "+str(columnNUM))
+                doof = []
+                print("doof: " + str(doof) )
 
+                for _ in range(int(columnNUM)): 
+                    doof.append(" ")
 
+                print("new doof: " + str(doof))
+                print(TableData[1])
 
-                
-                # print(allData + '\n')
+                rowNUM = TableData.index(doof)
+                print("Row #: "+str(rowNUM + 1)) # +1 because arrays start @ 0
+
+                i = 1
+                for _ in range(columnNUM):
+                    print("in loop")
+                    tableboxPATH =  "//tr["+str(rowNUM + 2)+"]/td["+str(i)+"]" # +2 to include table header row and arrays start at 0
+                    print(tableboxPATH)
+                    tableboxELM = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(tableboxPATH))
+                    tableboxELM.send_keys(".") #REPLACE WITH VAR TO ANSWER
+                    i+=1
+                driver.switch_to.parent_frame()
+                print("chart complete")
 
 
             submittedArray = driver.find_elements_by_xpath("//button[@class='btn buttonDone' and @style='display: none;']")
@@ -350,19 +370,18 @@ def isMPC():
         driver.switch_to.parent_frame()
         print("MPC answered")
 
-def isChart():
+def isDrag():
     try:
-        print("is it Chart?")
+        print("is it drag?")
         driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
-        frqFrames = driver.find_elements_by_xpath('//div[@role="toolbar" and @class="mce-container mce-toolbar mce-first mce-last mce-stack-layout-item"]')
-        logger.debug(str(len(frqFrames)) + " Boxes Found")
-
+        print("switched to frame")
+        driver.find_elements_by_xpath('//div[@class="drop-panel"]')
+        
     except NoSuchElementException:
-        print("No sir.")
-        driver.switch_to.parent_frame()
+        print("nada")
     else:
-        pass
+        print("yada")
 
 def isFinished():
     try:
