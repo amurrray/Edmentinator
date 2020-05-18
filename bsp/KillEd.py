@@ -286,8 +286,14 @@ def isFRQ():
         for frqFrame in count_arr:
             try:  #grabs chart answer 
                 print("looking for table ans")
-                tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table']") #gets answer table
+                try:
+                    tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table']") #gets answer table if padding is 5
+                except NoSuchElementException:
+                    tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-7 k-table']") #gets answer table if padding is 7
+
                 AnswerTable = TableThings(tableAnswerElm).get_all_data()    
+                print(AnswerTable)
+
             except NoSuchElementException:
                 print("no table answer saved")
             
@@ -300,11 +306,15 @@ def isFRQ():
             # try statement to figure out if it chart or not
             try:
                 print("table?")
-                driver.find_element_by_xpath('//table[@class="ed border-on padding-5 k-table mce-item-table"]')
-                
+                try:
+                    driver.find_element_by_xpath('//table[@class="ed border-on padding-5 k-table mce-item-table"]')
+                    tableXPATH='//table[@class="ed border-on padding-5 k-table mce-item-table"]'
+                except NoSuchElementException:
+                    driver.find_element_by_xpath('//table[@class="ed border-on padding-7 k-table mce-item-table"]')
+                    tableXPATH='//table[@class="ed border-on padding-7 k-table mce-item-table"]'
+
             except NoSuchElementException:
                 try:
-                    tableComplete = 0
                     print("\n" + "Not Table")
                     driver.find_element_by_xpath("//p")
                 except NoSuchElementException:
@@ -330,7 +340,8 @@ def isFRQ():
                         sleep(.5)
             else:
                 print("yeppa")           
-                tableElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table mce-item-table']"))
+                tableElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(tableboxPATH))
+                
                 # print(tableElm)
                 tableElmClass = tableElm.get_attribute("class")
                 print(tableElmClass)
