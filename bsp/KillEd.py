@@ -7,7 +7,7 @@ from time import sleep
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.common.exceptions import MoveTargetOutOfBoundsException, NoSuchElementException
+from selenium.common.exceptions import MoveTargetOutOfBoundsException, NoSuchElementException, NoSuchFrameException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -247,12 +247,12 @@ def isFRQ():
             except NoSuchElementException:
                 print("no table answer saved")
             
-
-            driver.switch_to.frame(frqFrame)
-            print("in " + frqFrame)
-            # box1Elm = driver.find_element_by_id("tinymce").get_attribute("class")
-            # print(box1Elm)
-
+            try:
+                driver.switch_to.frame(frqFrame)
+                print("in " + frqFrame)
+            except NoSuchFrameException:
+                driver.switch_to.frame("responseText_ifr")
+                print("Response Text iFrame")
             # try statement to figure out if it chart or not
             try:
                 print("table?")
@@ -408,20 +408,15 @@ def isDrag():
 
 def isFinished():
     print("are we done?")
-    currentPATH = "//span[@class='tutorial-nav-progress-current ng-binding']"
-    totalPATH = "//span[@class='tutorial-nav-progress-total ng-binding']"
-    try:
-        currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(currentPATH))
-        totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(totalPATH))
-    except NoSuchElementException:
-        driver.refresh()
+    driver.switch_to.parent_frame()
+    currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@id='rwTHnoteMarker3']"))
+    totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@id='rwTHnoteMarker5']"))
     currentNUM = int(currentPage.text)
     totalNUM = int(totalPage.text)
     print(str(currentNUM)+" of "+str(totalNUM))
     if currentNUM == totalNUM:
         print("Tutorial Complete")
         driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click() #closes tutorial
-        tutfinished = True
 
 
 def main(): # this the real one bois
