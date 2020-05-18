@@ -213,7 +213,11 @@ def completeTut():
 
         isMPC()
 
-        isDrag()
+        # isDrag()
+
+        # ischeckboxMPC()
+
+        isAnswerBtn()
 
         isFinished()
       
@@ -382,35 +386,93 @@ def isMPC():
         driver.switch_to.parent_frame()
         print("MPC answered")
 
-def isDrag():
+# def isDrag():
+#     try:
+#         print("is it drag?")
+#         driver.find_element_by_id("content-iframe")
+#         driver.switch_to.frame("content-iframe")
+#         print("switched to frame")
+#         driver.find_elements_by_xpath('//div[@class="drop-panel"]')
+#         driver.find_element_by_xpath('//div[@class="drag-panel"]')    
+#     except NoSuchElementException:
+#         print("nada")
+#         driver.switch_to.parent_frame()
+#     else:
+#         print("yada")
+#         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
+#         print("scroll to SubBtn")
+#         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
+#         print("find ans btn")
+#         showAnsBtnPATH = "//button[@class='btn buttonCorrectToggle' and @style='display:none;']"
+#         showAnsBtn = driver.find_element_by_xpath(showAnsBtnPATH)
+#         print("click ans btn")
+#         driver.execute_script("arguments[0].click()", showAnsBtn)
+#         print("clicked")
+#         driver.execute_script("arguments[0].click()", submitBtnElm)
+#         driver.switch_to.parent_frame()
+#         print("drag answered")
+
+# def ischeckboxMPC():
+#     try:
+#         print("is it checkbox?")
+#         driver.find_element_by_id("content-iframe")
+#         driver.switch_to.frame("content-iframe")
+#         print("switched to frame")
+#         driver.find_element_by_xpath("//input[@type='checkbox']")
+#     except NoSuchElementException:
+#         print("not checkbox")   
+#         driver.switch_to.parent_frame() 
+#     else:
+#         print("it is checkbox!")
+#         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
+#         print("scroll to SubBtn")
+#         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
+#         print("find ans btn")
+#         showAnsBtnPATH = "//button[@class='btn buttonCorrectToggle' and @style='display:none;']"
+#         showAnsBtn = driver.find_element_by_xpath(showAnsBtnPATH)
+#         print("click ans btn")
+#         driver.execute_script("arguments[0].click()", showAnsBtn)
+#         print("clicked")
+#         driver.execute_script("arguments[0].click()", submitBtnElm)
+#         driver.switch_to.parent_frame()
+#         print("checkbox answered")
+
+def isAnswerBtn():
     try:
-        print("is it drag?")
+        print("is there a answer toggle button?")
         driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
         print("switched to frame")
-        driver.find_elements_by_xpath('//div[@class="drop-panel"]')
-        driver.find_element_by_xpath('//div[@class="drag-panel"]')
-        
+        showAnsBtnPATH = "//button[@class='btn buttonCorrectToggle' and @style='display:none;']"
+        showAnsBtn = driver.find_element_by_xpath(showAnsBtnPATH)
     except NoSuchElementException:
-        print("nada")
+        print("nope")
+        driver.switch_to.parent_frame()
     else:
-        print("yada")
         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
         print("scroll to SubBtn")
         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
-        print("find ans btn")
-        showAnsBtnPATH = "//button[@class='btn buttonCorrectToggle' and @style='display:none;']"
-        showAnsBtn = driver.find_element_by_xpath(showAnsBtnPATH)
         print("click ans btn")
         driver.execute_script("arguments[0].click()", showAnsBtn)
         print("clicked")
         driver.execute_script("arguments[0].click()", submitBtnElm)
+        driver.switch_to.parent_frame()
+
+
+
+
 
 def isFinished():
     print("are we done?")
-    driver.switch_to.parent_frame()
-    currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@id='rwTHnoteMarker3']"))
-    totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@id='rwTHnoteMarker5']"))
+    # driver.switch_to.parent_frame()
+    try:
+        currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-current ng-binding']"))
+        totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-total ng-binding']"))
+    except NoSuchElementException:
+        driver.refresh()
+        currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-current ng-binding']"))
+        totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-total ng-binding']"))
+    
     currentNUM = int(currentPage.text)
     totalNUM = int(totalPage.text)
     print(str(currentNUM)+" of "+str(totalNUM))
