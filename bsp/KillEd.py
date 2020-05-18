@@ -140,16 +140,14 @@ def assignmentSelect(assignments):
     theEntireAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
     theAvailableAlphabet = []
 
-    i = 0
-    for x in theEntireAlphabet:
-        theAvailableAlphabet.append(theEntireAlphabet[i])
-        i += 1
+    for letter in theEntireAlphabet:
+        theAvailableAlphabet.append(letter)
         if len(theAvailableAlphabet) == len(assignments):
             break
     
     i = 0
     for assignment in assignments:
-        print('[' + theAvailableAlphabet[i] + '] ' + assignment['name']) #also theres this weird bug where this sometimes doesnt go through, if you run into it too maybe a webdriverwait somehwere in the getAssignments?
+        print('[' + theAvailableAlphabet[i] + '] ' + assignment['name'])
         i += 1
 
     while True:
@@ -410,7 +408,6 @@ def isFinished():
     else:
         print("Tutorial Complete")
         driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click() #closes tutorial
-        i = 69
 
 def main(): # this the real one bois
     driver.get("https://launchpad.classlink.com/loudoun")
