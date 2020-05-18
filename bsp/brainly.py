@@ -72,9 +72,10 @@ driver = webdriver.Chrome(CHROME_PATH, options=chrome_options)
 actions = ActionChains(driver)
 
 
-driver.get(BASE_URL)
+# driver.get(BASE_URL)
 # driver.get('https://www.expressvpn.com/what-is-my-ip')
 # driver.get('https://brainly.com/app/ask?entry=hero&q=where+was+george+washington+born')
 # driver.get('https://webcache.googleusercontent.com/search?q=cache:https://www.brainly.com')
 # driver.get('https://brainly.com/app/ask?entry=hero&q=who+has+the+most+cheese')
 # driver.get('http://useragentstring.com/')
+driver.get('https://www.quora.com/Is-Brainly-the-same-as-Quora')

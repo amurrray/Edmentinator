@@ -160,27 +160,15 @@ def assignmentSelect(assignments):
     print('Chose ' + assignments[selection]['name'])
     driver.get(BASE_URL + assignments[selection]['url'])
 
-def openCourse():
-    try:
-        WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[text()='0 of 2']"))).click()
-
-    except NoSuchElementException:
-        logger.error("no classes found")
-        while True:
-            goBack = input ("Go Back and Pick New Class?" + '\n' + "[y/n]? ")
-            if goBack in ['y', 'n']:
-                break
-        if goBack == 'y':
-            WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[text()='Back to Home']"))).click()
-            assignmentSelect(assignments)
-
-        elif goBack == 'n':
-            print("goodbye!" + "\n" + "you're on your own now.")
-    else:
-        print("assignment found")
-
 def openTut():
+    # topics = driver.find_elements_by_class_name("learningPathCard") # get all assignments
+    tutorialsToExpand = driver.find_elements_by_xpath("//span[contains(text(), 'of 2')]") # get just tuts
+
+    for tutorial in tutorialsToExpand:
+        tutorial.click()
+
     try:
+        # WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text() 'of 2']"))).click()
         tutorialBtn = driver.find_element_by_xpath("//span[contains(text(), 'Tutorial')]")
         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", tutorialBtn)
         WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Tutorial')]"))).click() 
@@ -515,11 +503,6 @@ def main(): # this the real one bois
         assignments = getAssignments()
         logger.debug('collecting assignments returned no assignments, retrying')
     assignmentSelect(assignments)
-
-    # sleep(.5)
-
-    openCourse()
-
     # sleep(.5)
 
     openTut()
@@ -529,6 +512,7 @@ def main(): # this the real one bois
     tutfinished = False
 
     while True:
+        openTut()
         completeTut()
         driver.switch_to.parent_frame()
         if tutfinished == True:
