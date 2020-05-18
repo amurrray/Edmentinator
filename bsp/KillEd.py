@@ -248,15 +248,15 @@ def openMasteryTest():
 
 def completeMasteryTest():
     logger.debug("in completeMasterTest()")
-    startTestBtn = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='mastery-test-start']"))
+    # startTestBtn = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='mastery-test-start']"))
     logger.debug("starting test")
     startTestBtn.click()
     logger.debug("clicked sTB")
-    reviewAnsBtnPATH = "//button[@class='mastery-test-learner-review']"
-    logger.debug("def reviewAnsBtn")
-    reviewAnsBtn = driver.find_element_by_xpath(reviewAnsBtnPATH)
-    logger.debug("clicking rab")
-    driver.execute_script("arguments[0].click();", reviewAnsBtn)
+    # reviewAnsBtnPATH = "//button[@class='mastery-test-learner-review']"
+    # logger.debug("def reviewAnsBtn")
+    # reviewAnsBtn = driver.find_element_by_xpath(reviewAnsBtnPATH)
+    # logger.debug("clicking rab")
+    # driver.execute_script("arguments[0].click();", reviewAnsBtn)
     
     # //*[contains(text(),'Nicaragua') and @style='display: none;']
 
@@ -306,12 +306,12 @@ def isFRQ():
             try:
                 logger.debug("table?")
                 try:
-                    driver.find_element_by_xpath('//table[@class="ed border-on padding-5 k-table mce-item-table"]')
                     tableXPATH='//table[@class="ed border-on padding-5 k-table mce-item-table"]'
+                    driver.find_element_by_xpath(tableXPATH)
                 except NoSuchElementException:
-                    driver.find_element_by_xpath('//table[@class="ed border-on padding-7 k-table mce-item-table"]')
                     tableXPATH='//table[@class="ed border-on padding-7 k-table mce-item-table"]'
-
+                    driver.find_element_by_xpath(tableXPATH)
+                logger.debug(tableXPATH)
             except NoSuchElementException:
                 try:
                     logger.debug("\n" + "Not Table")
@@ -339,7 +339,7 @@ def isFRQ():
                         sleep(.5)
             else:
                 logger.debug("yeppa")           
-                tableElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(tableboxPATH))
+                tableElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(tableXPATH))
                 
                 # logger.debug(tableElm)
                 tableElmClass = tableElm.get_attribute("class")
@@ -578,9 +578,11 @@ def main(): # this the real one bois
         logger.debug("opening tut")
         openTut()
     except SyntaxError:
-        openMasteryTest()
+        logger.debug("would be opening test rn")
+        # openMasteryTest()
         sleep(.5)
-        completeMasteryTest()
+        logger.debug("would be completing test rn")
+        # completeMasteryTest()
     else:
         while True:
             sleep(.5)
