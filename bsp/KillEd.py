@@ -72,10 +72,10 @@ class TableThings:
     def get_all_data(self):
         # get number of rows
         noOfRows = len(self.table.find_elements_by_xpath("//tr")) -1
-        # print("noOfRows: " + str(noOfRows))
+        # logger.debug("noOfRows: " + str(noOfRows))
         # get number of columns
         noOfColumns = len(self.table.find_elements_by_xpath("//tr[2]/th"))
-        # print("noOfColumns: " + str(noOfColumns))
+        # logger.debug("noOfColumns: " + str(noOfColumns))
         allData = []
         # iterate over the rows, to ignore the headers we have started the i with '1'
         for i in range(2, noOfRows+2):
@@ -88,13 +88,13 @@ class TableThings:
                     thPath = "//tr["+str(i)+"]/th["+str(j)+"]"
                     tdPath = "//tr["+str(i)+"]/td["+str(j)+"]"
                     ro.append(self.table.find_element_by_xpath(thPath).text)
-                    # print(str(thPath)+" found")
+                    # logger.debug(str(thPath)+" found")
                 except NoSuchElementException:
-                    # print("//th not found, looking for //td")
+                    # logger.debug("//th not found, looking for //td")
                     ro.append(self.table.find_element_by_xpath(tdPath).text)
-                    print(str(tdPath)+"found")
+                    logger.debug(str(tdPath)+"found")
             # add the row data to allData of the self.table
-            # print("i =" + str(i))
+            # logger.debug("i =" + str(i))
             allData.append(ro)
 
         return allData
@@ -107,7 +107,7 @@ class TableThings:
             presence = True
         return presence
 
-    def get_cell_data(self, row_number, column_number):
+    def get_cell_data(self, table, row_number, column_number):
         if(row_number == 0):
             raise Exception("Row number starts from 1")
         row_number = row_number+1
@@ -115,6 +115,8 @@ class TableThings:
         return cellData
 
 def getAssignments():
+    # WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath('//*[@id = "mCSB_2_container"]/div')) #Just to make sure page is loaded before looking for classes
+    WebDriverWait(driver, 10).until(lambda driver: expected_conditions.presence_of_element_located((By.CLASS_NAME, 'assignmentName')))
     page_source = driver.page_source
     
     soup = BeautifulSoup(page_source, 'lxml')
@@ -134,9 +136,6 @@ def getAssignments():
     return assignments
 
 def assignmentSelect(assignments):
-    WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_class_name('activeAssignments')) #Just to make sure page is loaded before looking for classes
-    sleep(.3)
-
     theEntireAlphabet = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
     theAvailableAlphabet = []
 
@@ -147,7 +146,7 @@ def assignmentSelect(assignments):
     
     i = 0
     for assignment in assignments:
-        print('[' + theAvailableAlphabet[i] + '] ' + assignment['name'])
+        logger.debug('[' + theAvailableAlphabet[i] + '] ' + assignment['name'])
         i += 1
 
     while True:
@@ -155,19 +154,19 @@ def assignmentSelect(assignments):
         if selectLet in theAvailableAlphabet:
             break
         else:
-            print('\n'+"Error: Invalid Character")
+            logger.debug('\n'+"Error: Invalid Character")
     selection = theAvailableAlphabet.index(selectLet) 
 
-    print('Chose ' + assignments[selection]['name'])
+    logger.debug('Chose ' + assignments[selection]['name'])
     driver.get(BASE_URL + assignments[selection]['url'])
 
 def openCourse():
     try:
         try:
-            print("looking for '1 of 2'")
+            logger.debug("looking for '1 of 2'")
             driver.find_element_by_xpath("//span[text()='1 of 2']").click() #opens half complete before not started
         except NoSuchElementException:
-            print("looking for '0 of 2'")
+            logger.debug("looking for '0 of 2'")
             driver.find_element_by_xpath("//span[text()='0 of 2']").click()
 
     except NoSuchElementException:
@@ -181,9 +180,9 @@ def openCourse():
             assignmentSelect(assignments)
 
         elif goBack == 'n':
-            print("goodbye!" + "\n" + "you're on your own now.")
+            logger.debug("goodbye!" + "\n" + "you're on your own now.")
     else:
-        print("assignment found")
+        logger.debug("assignment found")
 
 def openTut():
     try:
@@ -192,34 +191,34 @@ def openTut():
         openTutBtn = WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Tutorial')]")))
 
     except NoSuchElementException:
-        print("Tutorial Not Found")
+        logger.debug("Tutorial Not Found")
     
     else:
-        print("is tut complete?")
+        logger.debug("is tut complete?")
         try:
             driver.find_element_by_xpath("//li[@class='activity completed collapsed']")
         except NoSuchElementException:
             openTutBtn.click()
-            print("Tutorial Opened")
+            logger.debug("Tutorial Opened")
         else:
-            print("Tutorial Already Complete")
+            logger.debug("Tutorial Already Complete")
             raise SyntaxError('TutAlreadyComplete')
 
 def completeTut():
     try:
         WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//header[@class='tutorial-viewport-header']"))
-        print('is it disabled?')
+        logger.debug('is it disabled?')
         driver.find_element_by_xpath("//button[@class='tutorial-nav-next disabled']")
 
     except NoSuchElementException:
-        print("nada")
+        logger.debug("nada")
         WebDriverWait(driver, 20).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
-        print("*Next*")
+        logger.debug("*Next*")
         sleep(.5)
         completeTut()
     else:
-        print("yes")
-        print("work to be done...")
+        logger.debug("yes")
+        logger.debug("work to be done...")
         
         sleep(.5)
 
@@ -242,21 +241,21 @@ def openMasteryTest():
             driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", masterytestBtn)
             WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Mastery Test')]"))).click() 
         except NoSuchElementException:
-            print("Mastery Test Not Found")
+            logger.debug("Mastery Test Not Found")
         
         else:
-            print("Mastery Test Opened")
+            logger.debug("Mastery Test Opened")
 
 def completeMasteryTest():
-    print("in completeMasterTest()")
+    logger.debug("in completeMasterTest()")
     startTestBtn = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='mastery-test-start']"))
-    print("starting test")
+    logger.debug("starting test")
     startTestBtn.click()
-    print("clicked sTB")
+    logger.debug("clicked sTB")
     reviewAnsBtnPATH = "//button[@class='mastery-test-learner-review']"
-    print("def reviewAnsBtn")
+    logger.debug("def reviewAnsBtn")
     reviewAnsBtn = driver.find_element_by_xpath(reviewAnsBtnPATH)
-    print("clicking rab")
+    logger.debug("clicking rab")
     driver.execute_script("arguments[0].click();", reviewAnsBtn)
     
     # //*[contains(text(),'Nicaragua') and @style='display: none;']
@@ -268,7 +267,7 @@ def isFRQ():
         logger.debug('is it FRQ?')
         driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
-        print("switched to frame")
+        logger.debug("switched to frame")
         driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
 
     except NoSuchElementException:
@@ -282,30 +281,30 @@ def isFRQ():
             return
         
         count_arr = [str("mce_") + str(i) + str("_ifr") for i, frqFrame in enumerate(frqFrames, start=0)]
-        print("found iframes: " + str(count_arr))
+        logger.debug("found iframes: " + str(count_arr))
         for frqFrame in count_arr:
             try:  #grabs chart answer 
-                print("looking for table ans")
+                logger.debug("looking for table ans")
                 try:
                     tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table']") #gets answer table if padding is 5
                 except NoSuchElementException:
                     tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-7 k-table']") #gets answer table if padding is 7
 
                 AnswerTable = TableThings(tableAnswerElm).get_all_data()    
-                print(AnswerTable)
+                logger.debug(AnswerTable)
 
             except NoSuchElementException:
-                print("no table answer saved")
+                logger.debug("no table answer saved")
             
             try:
                 driver.switch_to.frame(frqFrame)
-                print("in " + frqFrame)
+                logger.debug("in " + frqFrame)
             except NoSuchFrameException:
                 driver.switch_to.frame("responseText_ifr")
-                print("Response Text iFrame")
+                logger.debug("Response Text iFrame")
             # try statement to figure out if it chart or not
             try:
-                print("table?")
+                logger.debug("table?")
                 try:
                     driver.find_element_by_xpath('//table[@class="ed border-on padding-5 k-table mce-item-table"]')
                     tableXPATH='//table[@class="ed border-on padding-5 k-table mce-item-table"]'
@@ -315,197 +314,197 @@ def isFRQ():
 
             except NoSuchElementException:
                 try:
-                    print("\n" + "Not Table")
+                    logger.debug("\n" + "Not Table")
                     driver.find_element_by_xpath("//p")
                 except NoSuchElementException:
                     logger.error("Cant find frq textbox or chart")
                 else:
-                    print("normal frq")
+                    logger.debug("normal frq")
                     answer = driver.find_element_by_xpath("//p")
                     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", answer)
                     answer.send_keys('.') #REPLACE WITH VAR TO ANSWER
-                    print("switching frame")
+                    logger.debug("switching frame")
                     driver.switch_to.parent_frame()
                     try:
-                        print("looking for btn")
+                        logger.debug("looking for btn")
                         driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']")
                     except NoSuchElementException:
-                        print("all buttons pressed, hopefully")
+                        logger.debug("all buttons pressed, hopefully")
                     else:
-                        print("found btn")
+                        logger.debug("found btn")
                         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
-                        print("scroll to btn")
+                        logger.debug("scroll to btn")
                         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
                         submitBtnElm.click()
                         sleep(.5)
             else:
-                print("yeppa")           
+                logger.debug("yeppa")           
                 tableElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(tableboxPATH))
                 
-                # print(tableElm)
+                # logger.debug(tableElm)
                 tableElmClass = tableElm.get_attribute("class")
-                print(tableElmClass)
+                logger.debug(tableElmClass)
                 #What the Fuck!
                 TableData = TableThings(tableElm).get_all_data()
 
-                print("Question Table: " + str(TableData))
+                logger.debug("Question Table: " + str(TableData))
                 try:
-                    print("AnserTable: " + str(AnswerTable))
+                    logger.debug("AnserTable: " + str(AnswerTable))
                 except UnboundLocalError:
-                    print("no Answer Table")
-                # print(AnswerTable)
+                    logger.debug("no Answer Table")
+                # logger.debug(AnswerTable)
 
                 columnNUM = TableThings(tableElm).get_column_count()
-                print("# of Columns: "+str(columnNUM))
+                logger.debug("# of Columns: "+str(columnNUM))
                 doof = []
-                print("doof: " + str(doof) )
+                logger.debug("doof: " + str(doof) )
 
                 for _ in range(int(columnNUM)): 
                     doof.append(" ")
 
-                print("new doof: " + str(doof))
-                print(TableData[1])
+                logger.debug("new doof: " + str(doof))
+                logger.debug(TableData[1])
 
-                # print("is" + str(doof) + "==" + str(TableData[1]))
+                # logger.debug("is" + str(doof) + "==" + str(TableData[1]))
                 # if str(doof) == str(TableData[1]):
                 #     continue
                 # else:
-                #     print("its not equal")
+                #     logger.debug("its not equal")
                 #     driver.switch_to.parent_frame()
                 #     break
 
                 rowNUM = TableData.index(doof)
-                print("Row #: "+str(rowNUM + 1)) # +1 because arrays start @ 0
+                logger.debug("Row #: "+str(rowNUM + 1)) # +1 because arrays start @ 0
                 
 
                 i = 1
                 for _ in range(columnNUM):
-                    print("in loop")
+                    logger.debug("in loop")
                     tableboxPATH =  "//tr["+str(rowNUM + 2)+"]/td["+str(i)+"]" # +2 to include table header row and arrays start at 0
-                    print(tableboxPATH)
+                    logger.debug(tableboxPATH)
                     tableboxELM = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(tableboxPATH))
                     tableboxELM.send_keys(".") #REPLACE WITH VAR TO ANSWER
                     i+=1
                 driver.switch_to.parent_frame()
-                print("chart complete")
+                logger.debug("chart complete")
             
 
             submittedArray = driver.find_elements_by_xpath("//button[@class='btn buttonDone' and @style='display: none;']")
-            print(len(frqFrames)) 
-            print(len(submittedArray))
+            logger.debug(len(frqFrames)) 
+            logger.debug(len(submittedArray))
             if len(frqFrames) == len(submittedArray): # check if we are on the last one
                 break
         driver.switch_to.parent_frame()
-        print("FRQ(s) Answered")
+        logger.debug("FRQ(s) Answered")
 
 def isMPC():
     try:
-        print('is it MPC?')
-        # print("looking for iframe")
+        logger.debug('is it MPC?')
+        # logger.debug("looking for iframe")
         driver.find_element_by_id("content-iframe")
-        print("switched to i frame")
+        logger.debug("switched to i frame")
         driver.switch_to.frame("content-iframe")
-        # print("looking for mpqChoices")
+        # logger.debug("looking for mpqChoices")
         driver.find_element_by_id("mcqChoices")
-        # print("finished all that jont")
+        # logger.debug("finished all that jont")
     except NoSuchElementException:
-        print("nope")
+        logger.debug("nope")
         driver.switch_to.parent_frame()
     else:
-        print("yes")
+        logger.debug("yes")
         script = driver.find_element_by_xpath("//script[contains(.,'IsCorrect')]").get_attribute("innerHTML")
-        # print(script + '\n')
+        # logger.debug(script + '\n')
         scriptElmCut = script[20:-2]
-        # print(scriptElmCut + '\n')
+        # logger.debug(scriptElmCut + '\n')
         parsedScript = loads(scriptElmCut) 
         theEntireNumabet = ['0', '1', '2', '3']
         i = 0
         for choice in parsedScript['Choices']: # this goes thru all the choices
             if choice['IsCorrect']: # if the isCorrect bool is True, then the answer is correct
-                print('the answer is ' + theEntireNumabet[i])
+                logger.debug('the answer is ' + theEntireNumabet[i])
                 ans = theEntireNumabet[i]
             i += 1
             
         mpcAnsr = 'choice' + ans
-        print(mpcAnsr)
+        logger.debug(mpcAnsr)
         mpcBtn = "//input[@id=\'" + mpcAnsr + "\']"
         # userURL = "//input[@id='username']"
-        print(mpcBtn)
+        logger.debug(mpcBtn)
         # mpcBtnElm = driver.find_element_by_xpath(mpcBtn)
         mpcBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(mpcBtn))
         mpcBtnElm.click()
         driver.switch_to.parent_frame()
-        print("MPC answered")
+        logger.debug("MPC answered")
 
 # def isDrag():
 #     try:
-#         print("is it drag?")
+#         logger.debug("is it drag?")
 #         driver.find_element_by_id("content-iframe")
 #         driver.switch_to.frame("content-iframe")
-#         print("switched to frame")
+#         logger.debug("switched to frame")
 #         driver.find_elements_by_xpath('//div[@class="drop-panel"]')
 #         driver.find_element_by_xpath('//div[@class="drag-panel"]')    
 #     except NoSuchElementException:
-#         print("nada")
+#         logger.debug("nada")
 #         driver.switch_to.parent_frame()
 #     else:
-#         print("yada")
+#         logger.debug("yada")
 #         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
-#         print("scroll to SubBtn")
+#         logger.debug("scroll to SubBtn")
 #         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
-#         print("find ans btn")
+#         logger.debug("find ans btn")
 #         showAnsBtnPATH = "//button[@class='btn buttonCorrectToggle' and @style='display:none;']"
 #         showAnsBtn = driver.find_element_by_xpath(showAnsBtnPATH)
-#         print("click ans btn")
+#         logger.debug("click ans btn")
 #         driver.execute_script("arguments[0].click()", showAnsBtn)
-#         print("clicked")
+#         logger.debug("clicked")
 #         driver.execute_script("arguments[0].click()", submitBtnElm)
 #         driver.switch_to.parent_frame()
-#         print("drag answered")
+#         logger.debug("drag answered")
 
 # def ischeckboxMPC():
 #     try:
-#         print("is it checkbox?")
+#         logger.debug("is it checkbox?")
 #         driver.find_element_by_id("content-iframe")
 #         driver.switch_to.frame("content-iframe")
-#         print("switched to frame")
+#         logger.debug("switched to frame")
 #         driver.find_element_by_xpath("//input[@type='checkbox']")
 #     except NoSuchElementException:
-#         print("not checkbox")   
+#         logger.debug("not checkbox")   
 #         driver.switch_to.parent_frame() 
 #     else:
-#         print("it is checkbox!")
+#         logger.debug("it is checkbox!")
 #         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
-#         print("scroll to SubBtn")
+#         logger.debug("scroll to SubBtn")
 #         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
-#         print("find ans btn")
+#         logger.debug("find ans btn")
 #         showAnsBtnPATH = "//button[@class='btn buttonCorrectToggle' and @style='display:none;']"
 #         showAnsBtn = driver.find_element_by_xpath(showAnsBtnPATH)
-#         print("click ans btn")
+#         logger.debug("click ans btn")
 #         driver.execute_script("arguments[0].click()", showAnsBtn)
-#         print("clicked")
+#         logger.debug("clicked")
 #         driver.execute_script("arguments[0].click()", submitBtnElm)
 #         driver.switch_to.parent_frame()
-#         print("checkbox answered")
+#         logger.debug("checkbox answered")
 
 def isAnswerBtn():
     try:
-        print("is there a answer toggle button?")
+        logger.debug("is there a answer toggle button?")
         driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
-        print("switched to frame")
+        logger.debug("switched to frame")
         showAnsBtnPATH = "//button[@class='btn buttonCorrectToggle' and @style='display:none;']"
         showAnsBtn = driver.find_element_by_xpath(showAnsBtnPATH)
     except NoSuchElementException:
-        print("nope")
+        logger.debug("nope")
         driver.switch_to.parent_frame()
     else:
         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
-        print("scroll to SubBtn")
+        logger.debug("scroll to SubBtn")
         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
-        print("click ans btn")
+        logger.debug("click ans btn")
         driver.execute_script("arguments[0].click()", showAnsBtn)
-        print("clicked")
+        logger.debug("clicked")
         driver.execute_script("arguments[0].click()", submitBtnElm)
         driver.switch_to.parent_frame()
 
@@ -514,24 +513,24 @@ def isAnswerBtn():
 
 
 def isFinished():
-    print("are we done?")
+    logger.debug("are we done?")
     # driver.switch_to.parent_frame()
     try:
         currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-current ng-binding']"))
         totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-total ng-binding']"))
     except ValueError:
-        print("refreshing")
+        logger.debug("refreshing")
         driver.refresh()
-        print("refreshed")
+        logger.debug("refreshed")
         WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//header[@class='tutorial-viewport-header']"))
         currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-current ng-binding']"))
         totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-total ng-binding']"))
     
     currentNUM = int(currentPage.text)
     totalNUM = int(totalPage.text)
-    print(str(currentNUM)+" of "+str(totalNUM))
+    logger.debug(str(currentNUM)+" of "+str(totalNUM))
     if currentNUM == totalNUM:
-        print("Tutorial Complete")
+        logger.debug("Tutorial Complete")
         driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click() #closes tutorial
 
 
@@ -553,7 +552,6 @@ def main(): # this the real one bois
     passElement.send_keys(MY_PASSWORD)
 
     logger.debug("user/pass entered")
-    # sleep(1)
     logger.debug("signing in...")
 
     buttonElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(buttonURL))
@@ -564,18 +562,20 @@ def main(): # this the real one bois
 
     driver.switch_to.window(driver.window_handles[-1])  # switch to edmentum tab
     WebDriverWait(driver, 15).until(expected_conditions.presence_of_element_located((By.CLASS_NAME, 'activeAssignments')))
-    logger.debug("edmentum page is ready!")
     logger.debug('collecting assignments')
 
-    assignments = getAssignments()
+    assignments = []
+    while len(assignments) == 0:
+        assignments = getAssignments()
+        logger.debug('collecting assignments returned no assignments, retrying')
     assignmentSelect(assignments)
 
-    sleep(.5)
+    # sleep(.5)
 
     openCourse()
 
     try:
-        print("opening tut")
+        logger.debug("opening tut")
         openTut()
     except SyntaxError:
         openMasteryTest()
@@ -587,5 +587,7 @@ def main(): # this the real one bois
             completeTut()
             driver.switch_to.parent_frame()
 
-main()
-print("poggers")
+if __name__ == "__main__":
+    main()
+
+logger.debug("poggers")
