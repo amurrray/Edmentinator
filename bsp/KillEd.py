@@ -182,6 +182,8 @@ def openCourse():
 
 def openTut():
     try:
+        tutorialBtn = driver.find_element_by_xpath("//span[contains(text(), 'Tutorial')]")
+        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", tutorialBtn)
         WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Tutorial')]"))).click() 
 
     except NoSuchElementException:
@@ -334,9 +336,9 @@ def isFRQ():
             
 
             submittedArray = driver.find_elements_by_xpath("//button[@class='btn buttonDone' and @style='display: none;']")
-            print(len(frqFrame)) 
+            print(len(frqFrames)) 
             print(len(submittedArray))
-            if len(frqFrame) == len(submittedArray): # check if we are on the last one
+            if len(frqFrames) == len(submittedArray): # check if we are on the last one
                 break
         driver.switch_to.parent_frame()
         print("FRQ(s) Answered")
@@ -387,27 +389,40 @@ def isDrag():
         driver.switch_to.frame("content-iframe")
         print("switched to frame")
         driver.find_elements_by_xpath('//div[@class="drop-panel"]')
+        driver.find_element_by_xpath('//div[@class="drag-panel"]')
         
     except NoSuchElementException:
         print("nada")
     else:
         print("yada")
+        submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
+        print("scroll to SubBtn")
+        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
+        print("find ans btn")
+        showAnsBtnPATH = "//button[@class='btn buttonCorrectToggle' and @style='display:none;']"
+        showAnsBtn = driver.find_element_by_xpath(showAnsBtnPATH)
+        print("click ans btn")
+        driver.execute_script("arguments[0].click()", showAnsBtn)
+        print("clicked")
+        driver.execute_script("arguments[0].click()", submitBtnElm)
 
 def isFinished():
+    print("are we done?")
+    currentPATH = "//span[@class='tutorial-nav-progress-current ng-binding']"
+    totalPATH = "//span[@class='tutorial-nav-progress-total ng-binding']"
     try:
-        print("are we done?")
-        driver.find_element_by_id("content-iframe")
-        driver.switch_to.frame("content-iframe")
-        congrats = "//h1[contains(text(),'Congratulations!')]"
-        driver.find_element_by_xpath(congrats)
-        driver.switch_to.parent_frame()
-        
+        currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(currentPATH))
+        totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(totalPATH))
     except NoSuchElementException:
-        print("nope")
-        
-    else:
+        driver.refresh()
+    currentNUM = int(currentPage.text)
+    totalNUM = int(totalPage.text)
+    print(str(currentNUM)+" of "+str(totalNUM))
+    if currentNUM == totalNUM:
         print("Tutorial Complete")
         driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click() #closes tutorial
+        tutfinished = True
+
 
 def main(): # this the real one bois
     driver.get("https://launchpad.classlink.com/loudoun")
@@ -454,11 +469,12 @@ def main(): # this the real one bois
 
     sleep(2)
 
-    i=0
+    tutfinished = False
+
     while True:
         completeTut()
         driver.switch_to.parent_frame()
-        if i == 69:
+        if tutfinished == True:
             break
 
 main()
