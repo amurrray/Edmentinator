@@ -163,7 +163,12 @@ def assignmentSelect(assignments):
 
 def openCourse():
     try:
-        WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[text()='0 of 2']"))).click()
+        try:
+            print("looking for '1 of 2'")
+            driver.find_element_by_xpath("//span[text()='1 of 2']").click() #opens half complete before not started
+        except NoSuchElementException:
+            print("looking for '0 of 2'")
+            driver.find_element_by_xpath("//span[text()='0 of 2']").click()
 
     except NoSuchElementException:
         logger.error("no classes found")
@@ -184,16 +189,25 @@ def openTut():
     try:
         tutorialBtn = driver.find_element_by_xpath("//span[contains(text(), 'Tutorial')]")
         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", tutorialBtn)
-        WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Tutorial')]"))).click() 
+        openTutBtn = WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Tutorial')]")))
 
     except NoSuchElementException:
         print("Tutorial Not Found")
     
     else:
-        print("Tutorial Opened")
+        print("is tut complete?")
+        try:
+            driver.find_element_by_xpath("//li[@class='activity completed collapsed']")
+        except NoSuchElementException:
+            openTutBtn.click()
+            print("Tutorial Opened")
+        else:
+            print("Tutorial Already Complete")
+            raise SyntaxError('TutAlreadyComplete')
 
 def completeTut():
     try:
+        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//header[@class='tutorial-viewport-header']"))
         print('is it disabled?')
         driver.find_element_by_xpath("//button[@class='tutorial-nav-next disabled']")
 
@@ -220,7 +234,33 @@ def completeTut():
         isAnswerBtn()
 
         isFinished()
-      
+
+def openMasteryTest():
+        try:
+
+            masterytestBtn = driver.find_element_by_xpath("//span[contains(text(), 'Mastery Test')]")
+            driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", masterytestBtn)
+            WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Mastery Test')]"))).click() 
+        except NoSuchElementException:
+            print("Mastery Test Not Found")
+        
+        else:
+            print("Mastery Test Opened")
+
+def completeMasteryTest():
+    print("in completeMasterTest()")
+    startTestBtn = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='mastery-test-start']"))
+    print("starting test")
+    startTestBtn.click()
+    print("clicked sTB")
+    reviewAnsBtnPATH = "//button[@class='mastery-test-learner-review']"
+    print("def reviewAnsBtn")
+    reviewAnsBtn = driver.find_element_by_xpath(reviewAnsBtnPATH)
+    print("clicking rab")
+    driver.execute_script("arguments[0].click();", reviewAnsBtn)
+    
+    # //*[contains(text(),'Nicaragua') and @style='display: none;']
+
 
 def isFRQ():
     
@@ -468,8 +508,11 @@ def isFinished():
     try:
         currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-current ng-binding']"))
         totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-total ng-binding']"))
-    except NoSuchElementException:
+    except ValueError:
+        print("refreshing")
         driver.refresh()
+        print("refreshed")
+        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//header[@class='tutorial-viewport-header']"))
         currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-current ng-binding']"))
         totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-total ng-binding']"))
     
@@ -520,19 +563,18 @@ def main(): # this the real one bois
 
     openCourse()
 
-    sleep(.5)
-
-    openTut()
-
-    sleep(2)
-
-    tutfinished = False
-
-    while True:
-        completeTut()
-        driver.switch_to.parent_frame()
-        if tutfinished == True:
-            break
+    try:
+        print("opening tut")
+        openTut()
+    except SyntaxError:
+        openMasteryTest()
+        sleep(.5)
+        completeMasteryTest()
+    else:
+        while True:
+            sleep(.5)
+            completeTut()
+            driver.switch_to.parent_frame()
 
 main()
 print("poggers")
