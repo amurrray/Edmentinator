@@ -185,7 +185,7 @@ def openCourse():
 def openTut():
     try:
         WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Tutorial')]"))).click() 
-    
+
     except NoSuchElementException:
         print("Tutorial Not Found")
     
@@ -199,7 +199,7 @@ def completeTut():
 
     except NoSuchElementException:
         print("nada")
-        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
+        WebDriverWait(driver, 20).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
         print("*Next*")
         sleep(.5)
         completeTut()
@@ -231,10 +231,8 @@ def isFRQ():
         logger.debug("nope")
     else:
         logger.debug("yes")
-
         frqFrames = driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
         logger.debug(str(len(frqFrames)) + " FRQs Found")
-        
         if len(frqFrames) == 0:
             driver.switch_to.parent_frame()
             return
@@ -247,8 +245,8 @@ def isFRQ():
                 tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table']") #gets answer table
                 AnswerTable = TableThings(tableAnswerElm).get_all_data()    
             except NoSuchElementException:
-                logger.log("no table answer saved")
-                return
+                print("no table answer saved")
+            
 
             driver.switch_to.frame(frqFrame)
             print("in " + frqFrame)
@@ -258,9 +256,11 @@ def isFRQ():
             # try statement to figure out if it chart or not
             try:
                 print("table?")
-                driver.find_element_by_xpath('//table[@class="ed border-on padding-5 k-table mce-item-table"]')   
+                driver.find_element_by_xpath('//table[@class="ed border-on padding-5 k-table mce-item-table"]')
+                
             except NoSuchElementException:
                 try:
+                    tableComplete = 0
                     print("\n" + "Not Table")
                     driver.find_element_by_xpath("//p")
                 except NoSuchElementException:
@@ -294,7 +294,10 @@ def isFRQ():
                 TableData = TableThings(tableElm).get_all_data()
 
                 print("Question Table: " + str(TableData))
-                print("AnserTable: " + str(AnswerTable))
+                try:
+                    print("AnserTable: " + str(AnswerTable))
+                except UnboundLocalError:
+                    print("no Answer Table")
                 # print(AnswerTable)
 
                 columnNUM = TableThings(tableElm).get_column_count()
@@ -308,8 +311,17 @@ def isFRQ():
                 print("new doof: " + str(doof))
                 print(TableData[1])
 
+                # print("is" + str(doof) + "==" + str(TableData[1]))
+                # if str(doof) == str(TableData[1]):
+                #     continue
+                # else:
+                #     print("its not equal")
+                #     driver.switch_to.parent_frame()
+                #     break
+
                 rowNUM = TableData.index(doof)
                 print("Row #: "+str(rowNUM + 1)) # +1 because arrays start @ 0
+                
 
                 i = 1
                 for _ in range(columnNUM):
@@ -321,13 +333,13 @@ def isFRQ():
                     i+=1
                 driver.switch_to.parent_frame()
                 print("chart complete")
-
+            
 
             submittedArray = driver.find_elements_by_xpath("//button[@class='btn buttonDone' and @style='display: none;']")
-
+            print(len(frqFrame)) 
+            print(len(submittedArray))
             if len(frqFrame) == len(submittedArray): # check if we are on the last one
                 break
-        
         driver.switch_to.parent_frame()
         print("FRQ(s) Answered")
 
