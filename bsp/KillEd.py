@@ -160,12 +160,45 @@ def assignmentSelect(assignments):
     logger.debug('Chose ' + assignments[selection]['name'])
     driver.get(BASE_URL + assignments[selection]['url'])
 
-def openTut():
-    # topics = driver.find_elements_by_class_name("learningPathCard") # get all assignments
-    tutorialsToExpand = driver.find_elements_by_xpath("//span[contains(text(), 'of 2')]") # get just tuts
+def openCourse():
+    #find/open started unit, then if one cant be found find/open new unit    
+    
+    unitArray = driver.find_elements_by_xpath("//ul[@id='baseNodes']/li/div")
+    # unitCount = len(unitArray)
 
-    for tutorial in tutorialsToExpand:
-        tutorial.click()
+    # i = 1
+    # for unit in unitArray:
+    #     specificUnitElm = driver.find_elements_by_xpath("//ul[@id='baseNodes']/li["+ str(i) +"]")
+    #     print(specificUnitElm)
+    #     specificUnitElmClass = specificUnitElm.get_attribute("class")
+    #     if "unit completed reportsMastery" in str(specificUnitElmClass):
+    #         logger.debug(str(specificUnitElm)+" is completed")
+    #         i + 1
+    #     else:
+    #         break
+    for unit in unitArray:
+        # logger.debug(unit)
+        unitClass = unit.get_attribute('class')
+        # logger.debug(unitClass)
+        if "unit completed reportsMastery" in str(unitClass):
+            logger.debug(str(unit)+" is completed")
+        else:
+            logger.debug(str(unit)+" needs work" )
+            break
+
+    if "collapsed" in str(unitClass):
+        logger.debug("opening unit")
+        unit.click()
+
+    try:
+        coursePATH = "//span[contains(text(), '1 of 2')]"
+        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
+    except NoSuchElementException:
+        coursePATH = "//span[contains(text(), '0 of 2')]"
+        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
+
+    courseBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
+    courseBtnElm.click()
 
     try:
         # WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text() 'of 2']"))).click()
@@ -554,14 +587,13 @@ def main(): # this the real one bois
     assignmentSelect(assignments)
     # sleep(.5)
 
-    openTut()
+    openCourse()
 
     # sleep(2)
 
     tutfinished = False
 
     while True:
-        openTut()
         completeTut()
         driver.switch_to.parent_frame()
         if tutfinished == True:
