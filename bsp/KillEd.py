@@ -7,7 +7,7 @@ from time import sleep
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.common.exceptions import MoveTargetOutOfBoundsException, NoSuchElementException, NoSuchFrameException
+from selenium.common.exceptions import MoveTargetOutOfBoundsException, NoSuchElementException, NoSuchFrameException, ElementNotInteractableException, TimeoutException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -146,7 +146,7 @@ def assignmentSelect(assignments):
     
     i = 0
     for assignment in assignments:
-        logger.debug('[' + theAvailableAlphabet[i] + '] ' + assignment['name'])
+        print('[' + theAvailableAlphabet[i] + '] ' + assignment['name'])
         i += 1
 
     while True:
@@ -162,43 +162,49 @@ def assignmentSelect(assignments):
 
 def openCourse():
     #find/open started unit, then if one cant be found find/open new unit    
-    
-    unitArray = driver.find_elements_by_xpath("//ul[@id='baseNodes']/li/div")
-    # unitCount = len(unitArray)
-
-    # i = 1
-    # for unit in unitArray:
-    #     specificUnitElm = driver.find_elements_by_xpath("//ul[@id='baseNodes']/li["+ str(i) +"]")
-    #     print(specificUnitElm)
-    #     specificUnitElmClass = specificUnitElm.get_attribute("class")
-    #     if "unit completed reportsMastery" in str(specificUnitElmClass):
-    #         logger.debug(str(specificUnitElm)+" is completed")
-    #         i + 1
-    #     else:
-    #         break
-    for unit in unitArray:
-        # logger.debug(unit)
-        unitClass = unit.get_attribute('class')
-        # logger.debug(unitClass)
-        if "unit completed reportsMastery" in str(unitClass):
-            logger.debug(str(unit)+" is completed")
-        else:
-            logger.debug(str(unit)+" needs work" )
-            break
-
-    if "collapsed" in str(unitClass):
-        logger.debug("opening unit")
-        unit.click()
-
-    try:
-        coursePATH = "//span[contains(text(), '1 of 2')]"
-        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
-    except NoSuchElementException:
-        coursePATH = "//span[contains(text(), '0 of 2')]"
-        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
-
-    courseBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
-    courseBtnElm.click()
+    # expandBtnArray = driver.find_elements_by_xpath("//button[@class='ico expandIco']")
+    # print(expandBtnArray)
+    # for button in expandBtnArray:
+    #     try:
+    #         logger.debug("opening unit")
+    #         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", button)
+    #         button.click()
+    #         logger.debug("clicked")
+    #     except ElementNotInteractableException:
+    #         print("unit already open")
+    # sleep(.5)
+    sortInProgress = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-inprogress']"))
+    sortNotStarted = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-notstarted']"))
+    print("above array")
+    sortArray = [sortInProgress, sortNotStarted]
+    for sort in sortArray:
+        print(str(sort))
+        sort.click()
+        sleep(5)
+        try:
+            try:
+                print("looking for path 1 of 2")
+                coursePATH = "//span[contains(text(), '1 of 2')]"
+                course = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
+                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", course)    
+                course.click()
+            except ElementNotInteractableException:
+                try:
+                    print("looking for path 0 of 2")
+                    coursePATH = "//span[contains(text(), '0 of 2')]"
+                    course = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
+                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", course)    
+                    course.click()
+                except ElementNotInteractableException:
+                    print("No Courses Found")
+                else:
+                    print("Found Course (0 of 2)")
+                    break
+            else:
+                print("Found Course (1 of 2)")
+                break           
+        except SyntaxError:
+            print("if this runs imma kms")
 
     try:
         # WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text() 'of 2']"))).click()
@@ -208,17 +214,22 @@ def openCourse():
 
     except NoSuchElementException:
         logger.debug("Tutorial Not Found")
-    
+
     else:
         logger.debug("is tut complete?")
         try:
-            driver.find_element_by_xpath("//li[@class='activity completed collapsed']")
-        except NoSuchElementException:
+            try:
+                WebDriverWait(driver, .5).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[@class='ico finishedBigIco]")))
+            except TimeoutException:
+                WebDriverWait(driver, .5).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[@class='ico exemptBigIco]")))
+
+        except TimeoutException:
             openTutBtn.click()
             logger.debug("Tutorial Opened")
         else:
             logger.debug("Tutorial Already Complete")
-            raise SyntaxError('TutAlreadyComplete')
+            logger.debug('TutAlreadyComplete')
+            logger.error('Would Attempt to Open Test')
 
 def completeTut():
     try:
@@ -247,6 +258,8 @@ def completeTut():
         # ischeckboxMPC()
 
         isAnswerBtn()
+
+        isAnswerBtn2()
 
         isFinished()
 
@@ -330,7 +343,7 @@ def isFRQ():
                 logger.debug(tableXPATH)
             except NoSuchElementException:
                 try:
-                    logger.debug("\n" + "Not Table")
+                    logger.debug("Not Table")
                     driver.find_element_by_xpath("//p")
                 except NoSuchElementException:
                     logger.error("Cant find frq textbox or chart")
@@ -351,6 +364,7 @@ def isFRQ():
                         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
                         logger.debug("scroll to btn")
                         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
+                        WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//button[@class='btn buttonDone' and @style='']")))
                         submitBtnElm.click()
                         sleep(.5)
             else:
@@ -505,7 +519,7 @@ def isMPC():
 
 def isAnswerBtn():
     try:
-        logger.debug("is there a answer toggle button?")
+        logger.debug("is there an answer toggle button?")
         driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
         logger.debug("switched to frame")
@@ -524,6 +538,26 @@ def isAnswerBtn():
         driver.execute_script("arguments[0].click()", submitBtnElm)
         driver.switch_to.parent_frame()
 
+def isAnswerBtn2():
+    try:
+        logger.debug("is there an answer button?")
+        driver.find_element_by_id("content-iframe")
+        driver.switch_to.frame("content-iframe")
+        logger.debug("switched to frame")
+        showAnsBtnPATH = "//button[@id='showAnswer' and @style='display:none;']"
+        showAnsBtn = driver.find_element_by_xpath(showAnsBtnPATH)
+    except NoSuchElementException:
+        logger.debug("nope")
+        driver.switch_to.parent_frame()
+    else:
+        checkAnsBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@id='checkAnswer']"))
+        logger.debug("scroll to SubBtn")
+        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", checkAnsBtnElm)
+        logger.debug("click ans btn")
+        driver.execute_script("arguments[0].click()", showAnsBtn)
+        logger.debug("clicked")
+        driver.execute_script("arguments[0].click()", checkAnsBtnElm)
+        driver.switch_to.parent_frame()
 
 
 
