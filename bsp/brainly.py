@@ -1,6 +1,7 @@
 import logging
 import os
 import requests
+from requests_html import HTMLSession
 import pickle
 from random import randint
 from lxml.html import fromstring
@@ -39,20 +40,36 @@ logger.debug(PROXY)
 userAgent = UserAgent().random
 logger.debug(userAgent)
 
-datadomeKey = input('insert datadome key: ')
-
 def query(query):
-    query.replace(' ', '+')
+    # generate query url so that the user can get datadome key
+    query = query.replace(' ', '+')
+    queryUrl = BASE_URL + 'app/ask?entry=top&q=' + query
+    print(queryUrl)
+    answers = pickle.load(open('answers.pkl', 'rb'))
 
-answers = pickle.load(open('answers.pkl', 'rb'))
-s = requests.session()
-my_cookie = requests.cookies.create_cookie('datadome', datadomeKey)
+    # make the request look like it came from a user browser
+    s = requests.session()
+    s = HTMLSession()
+    datadomeKey = input('insert datadome key: ')
+    my_cookie = requests.cookies.create_cookie('datadome', datadomeKey)
+    s.headers.update({'User-Agent': userAgent})
+    s.cookies.set_cookie(my_cookie)
 
-s.cookies.set_cookie(my_cookie)
-r = s.get('https://brainly.com/question/3021648')
+    r = s.get(queryUrl)
+    # THIS DOESNT FKIN WORK CUZ BRAINLY USES JS TO GENERATE THE SEARCH PAGE
 
-print(r.text)
+    soup = BeautifulSoup(r.text, 'lxml')
 
-# query('where was george washington born')
-# use requests tard, just send it same way as browser?
-pickle.dump(answers, open('answers.pkl', 'wb'))
+    questions = soup.find_all('a', href=True)
+    file = open('resp.html', 'w')
+    file.write(r.text)
+    file.close()
+    answers = soup.find_all('a', class_='sg-text sg-text--small sg-text--link sg-text--bold sg-text--blue-dark')
+
+    for answer in answers:
+        print(answer)
+
+    pickle.dump(answers, open('answers.pkl', 'wb'))
+
+if __name__ == "__main__":
+    query('where was george washington born')
