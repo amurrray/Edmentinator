@@ -24,9 +24,9 @@ logger.setLevel(logging.DEBUG)
 
 # constants
 if os.name == 'nt':
-    CHROME_PATH = str(Path(__file__).resolve().parents[0]) + '/chromedriver.exe'
+    CHROME_PATH = str(Path(__file__).resolve().parents[0]) + '/drivers/chromedriver.exe'
 else:
-    CHROME_PATH = str(Path(__file__).resolve().parents[0]) + '/chromedriver'
+    CHROME_PATH = str(Path(__file__).resolve().parents[0]) + '/drivers/chromedriver'
 EXTENSION_PATH = str(Path(__file__).resolve().parents[0]) + '/classlink.crx'
 CHROME_OPTIONS = webdriver.ChromeOptions()
 CHROME_OPTIONS.add_extension(EXTENSION_PATH)
