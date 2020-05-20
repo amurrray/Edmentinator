@@ -24,6 +24,8 @@ def query(question, specificness=90):
 
     i know specificness is dumb. thats why i used it.
     specificness is on a scale from 0 to 100, 0 being everything matches and 100 being only exact matches
+
+    example call: print(query('who was thomas jefferson')['answer'])
     '''
     
     answersDB = pickle.load(open('answers.pkl', 'rb'))
@@ -43,7 +45,7 @@ def query(question, specificness=90):
         # generate question url so that the user can get datadome key
         questionUrl = BASE_URL + 'app/ask?entry=top&q=' + question.replace(' ', '+')
 
-        # make the request look like it came from a user browser
+        # make the request look like it came from a user browser EDIT: it now does come from a fkin user browser
         print(questionUrl)
         answerBrainly = input('answer: ')
 
@@ -59,5 +61,15 @@ def query(question, specificness=90):
             if foundQuestion[0] == answer['question']:
                 return {'question': answer['question'], 'answer': answer['answer']}
 
+def pickAnswer(question, choices):
+    '''
+    answers must be a list of all the choices
+    example call: print(pickAnswer('who was benjamin fanklin', ['thommy dad', 'beny boy']))
+    '''
+    answer = query(question)['answer']
+    answerCorrect = process.extractOne(answer, choices)[0]
+    return choices.index(answerCorrect)
+
 if __name__ == "__main__":
     print(query('who was thomas jefferson')['answer'])
+    print(pickAnswer('who was benjamin fanklin', ['thommy dad', 'beny boy']))
