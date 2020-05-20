@@ -7,7 +7,7 @@ from time import sleep
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.common.exceptions import MoveTargetOutOfBoundsException, NoSuchElementException, NoSuchFrameException, ElementNotInteractableException, TimeoutException
+from selenium.common.exceptions import MoveTargetOutOfBoundsException, NoSuchElementException, NoSuchFrameException, ElementNotInteractableException, TimeoutException, ElementClickInterceptedException
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -16,6 +16,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from slimit import ast
 from slimit.parser import Parser as JavascriptParser
 from slimit.visitors import nodevisitor
+from webdriver_manager.chrome import ChromeDriverManager
 
 # setup logging
 logging.basicConfig(level=logging.INFO, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
@@ -34,7 +35,8 @@ BASE_URL = "https://f2.app.edmentum.com/"
 DEBUG = True
 logger.debug('soup was here')
 
-driver = webdriver.Chrome(CHROME_PATH, options=CHROME_OPTIONS)
+driver = webdriver.Chrome(ChromeDriverManager().install(), options=CHROME_OPTIONS)
+# driver = webdriver.Chrome(CHROME_PATH, options=CHROME_OPTIONS)
 actions = ActionChains(driver)
 assignments = None # placeholder because i bad code flow
 
@@ -180,22 +182,26 @@ def openCourse():
     for sort in sortArray:
         print(str(sort))
         sort.click()
-        sleep(5)
+        sleep(1)
         try:
             try:
                 print("looking for path 1 of 2")
                 coursePATH = "//span[contains(text(), '1 of 2')]"
                 course = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
-                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", course)    
+                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", course)
                 course.click()
-            except ElementNotInteractableException:
+                openTut()
+
+            except (ElementNotInteractableException, ElementClickInterceptedException):
                 try:
                     print("looking for path 0 of 2")
                     coursePATH = "//span[contains(text(), '0 of 2')]"
                     course = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
                     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", course)    
                     course.click()
-                except ElementNotInteractableException:
+                    openTut()
+
+                except (ElementNotInteractableException, ElementClickInterceptedException):
                     print("No Courses Found")
                 else:
                     print("Found Course (0 of 2)")
@@ -206,11 +212,24 @@ def openCourse():
         except SyntaxError:
             print("if this runs imma kms")
 
+def openTut():
     try:
         # WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text() 'of 2']"))).click()
-        tutorialBtn = driver.find_element_by_xpath("//span[contains(text(), 'Tutorial')]")
-        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", tutorialBtn)
-        openTutBtn = WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Tutorial')]")))
+        tutorialBtnArray = driver.find_elements_by_xpath("//span[contains(text(), 'Tutorial')]")
+        print(tutorialBtnArray)
+        for tutorialBtn in tutorialBtnArray:
+            try:
+                print(tutorialBtn)
+                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", tutorialBtn)
+                WebDriverWait(driver, 1).until(expected_conditions.element_to_be_clickable((By.ID, tutorialBtn)))
+                # tutorialBtn.get_attribute("XPATH")
+            except (TimeoutException, NoSuchElementException, ElementClickInterceptedException):
+                print("next tut")
+            
+            else:
+                print("opened tutorial")
+                tutorialBtn = tutorialBtn
+                break
 
     except NoSuchElementException:
         logger.debug("Tutorial Not Found")
@@ -219,17 +238,36 @@ def openCourse():
         logger.debug("is tut complete?")
         try:
             try:
-                WebDriverWait(driver, .5).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[@class='ico finishedBigIco]")))
-            except TimeoutException:
-                WebDriverWait(driver, .5).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[@class='ico exemptBigIco]")))
+                print("looking for finished icon")
+                WebDriverWait(driver, .5).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[@class='ico finishedBigIco']")))
 
+            except TimeoutException:
+                print("looking for expemt icon")
+                WebDriverWait(driver, .5).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[@class='ico exemptBigIco]'")))
         except TimeoutException:
-            openTutBtn.click()
+            tutorialBtn.click()
             logger.debug("Tutorial Opened")
         else:
             logger.debug("Tutorial Already Complete")
             logger.debug('TutAlreadyComplete')
             logger.error('Would Attempt to Open Test')
+            closeCourseBtnArray = driver.find_elements_by_xpath("//span[@class='ico closeCardIco']")
+            i = 0
+            for closeCourseBtn in closeCourseBtnArray:
+                i+=1
+                try:
+                    print("is clickable?")
+                    print(closeCourseBtn)
+                    closeCourseBtn.click()
+                except ElementClickInterceptedException:
+                    print("it isnt")
+                    
+                else:
+                    ("it is?")
+                    break
+
+            raise ElementNotInteractableException
+
 
 def completeTut():
     try:
@@ -315,9 +353,21 @@ def isFRQ():
             try:  #grabs chart answer 
                 logger.debug("looking for table ans")
                 try:
+                    try:
+                        arrayAnswerBtn = driver.find_element_by_xpath("//button[@class='buttonExplanationToggle' and @style='display:none;']")
+                        driver.execute_script("arguments[0].click()", arrayAnswerBtn)
+                    except NoSuchElementException:
+                        print("Cant find show answers btn")
+
                     tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table']") #gets answer table if padding is 5
                 except NoSuchElementException:
-                    tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-7 k-table']") #gets answer table if padding is 7
+                    try:
+                        tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-7 k-table']") #gets answer table if padding is 7
+                    except NoSuchElementException:
+                        try:
+                            tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table bgc-gray-lighter']")
+                        except NoSuchElementException:
+                            tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-7 k-table bgc-gray-lighter']")
 
                 AnswerTable = TableThings(tableAnswerElm).get_all_data()    
                 logger.debug(AnswerTable)
@@ -379,7 +429,11 @@ def isFRQ():
 
                 logger.debug("Question Table: " + str(TableData))
                 try:
-                    logger.debug("AnserTable: " + str(AnswerTable))
+                    logger.debug("AnswerTable: " + str(AnswerTable))
+                    for x in AnswerTable:
+                        for y in x:
+                            print(y,end=' ')
+                        print()
                 except UnboundLocalError:
                     logger.debug("no Answer Table")
                 # logger.debug(AnswerTable)
@@ -391,6 +445,11 @@ def isFRQ():
 
                 for _ in range(int(columnNUM)): 
                     doof.append(" ")
+                
+                for x in doof:
+                    for y in x:
+                        print(y,end=' ')
+                    print()
 
                 logger.debug("new doof: " + str(doof))
                 logger.debug(TableData[1])
