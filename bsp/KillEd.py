@@ -13,9 +13,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
-from slimit import ast
-from slimit.parser import Parser as JavascriptParser
-from slimit.visitors import nodevisitor
 from webdriver_manager.chrome import ChromeDriverManager
 
 # setup logging
