@@ -3,4 +3,4 @@ mechanicalsoup
 selenium
 slimit
 pickledb
-fake_useragent
+fuzzywuzzy
