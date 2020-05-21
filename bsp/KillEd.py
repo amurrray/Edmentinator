@@ -353,6 +353,7 @@ def completeMasteryTest():
 
     logger.debug("starting test")
     startTestBtn.click()
+    sleep(1)
     questionCountArray = driver.find_elements_by_xpath("//li[@class='drop-menu-item']")
     questionCount = len(questionCountArray) + 1
     print("Questions: " + str(questionCount))
@@ -373,6 +374,15 @@ def completeMasteryTest():
                         line1 = driver.find_element_by_xpath("//div[@class='stem']/div//p")
                     except NoSuchElementException:
                         print("imma kms")
+                    else:
+                        print("question type 4 found")
+                else:
+                    print("question type 3 found")
+            else:
+                print("question type 2 found")
+        else:
+            print("question type 1 found")
+            
         print(line1.text)
         queryArray.append(line1.text)
         # print(queryArray)
@@ -437,10 +447,12 @@ def completeMasteryTest():
 
         # answerArray.append(finalAnswerOptionsArray)
         # print(answerArray)
-
-        answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + foundAnswer + "')]")
-        answerChoice.click()
-
+        for answer in foundAnswer:
+            try:
+                answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + answer + "')]")
+                answerChoice.click()
+            except NoSuchElementException:
+                print("ans not available")
         sleep(5)
         print("next btn")
         nextBtn = driver.find_element_by_xpath("//a[@class='player-button worksheets-submit' and contains(text(),'Next')]")
@@ -457,22 +469,22 @@ def BigBoyTest():
         bbTestOpen = False
         print("in bigboytest")
         bbTestArray = driver.find_elements_by_xpath("//span[@class='ico testIco']")
+        print(bbTestArray)
         for bbTest in bbTestArray:
             try:
                 print("is clickable?")
                 print(bbTest)
                 bbTest.click()
-            except ElementClickInterceptedException:
+            except (ElementClickInterceptedException, ElementNotInteractableException):
                 print("it isnt")
-
             else:
-                ("it is?")
+                print("it is?")
                 bbTestOpen = True
                 break
         if bbTestOpen == False:
-            raise ElementNotInteractableException
+            raise SyntaxError
 
-    except (NoSuchElementException, ElementNotInteractableException):
+    except SyntaxError:
         print("No Big Tests Found")
     else:
         logger.debug("Mastery Test Opened")
