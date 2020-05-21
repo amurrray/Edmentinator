@@ -1,5 +1,6 @@
 import logging
 import os
+import answers
 from json import loads
 from pathlib import Path
 from secrets import MY_PASSWORD, MY_USERNAME
@@ -181,24 +182,42 @@ def openCourse():
         sort.click()
         sleep(1)
         try:
+            tutOpen = False
             try:
                 print("looking for path 1 of 2")
                 coursePATH = "//span[contains(text(), '1 of 2')]"
-                course = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
-                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", course)
-                course.click()
-                openTut()
-
-            except (ElementNotInteractableException, ElementClickInterceptedException):
+                coursesArray = WebDriverWait(driver, 1).until(lambda driver: driver.find_elements_by_xpath(coursePATH))
+                for course in coursesArray:
+                    try:
+                        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", course)
+                        course.click()
+                    except (ElementNotInteractableException, ElementClickInterceptedException, TimeoutException):
+                        print("wrong course")
+                    else:
+                        openTut()
+                        tutOpen = True
+                        break   
+                if tutOpen == False:
+                    raise ElementNotInteractableException
+            
+            except (ElementNotInteractableException, ElementClickInterceptedException, TimeoutException):
                 try:
                     print("looking for path 0 of 2")
                     coursePATH = "//span[contains(text(), '0 of 2')]"
-                    course = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(coursePATH))
-                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", course)    
-                    course.click()
-                    openTut()
-
-                except (ElementNotInteractableException, ElementClickInterceptedException):
+                    coursesArray = WebDriverWait(driver, 1).until(lambda driver: driver.find_elements_by_xpath(coursePATH))
+                    for course in coursesArray:
+                        try:
+                            driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", course)
+                            course.click()
+                        except (ElementNotInteractableException, ElementClickInterceptedException, TimeoutException):
+                            print("wrong course")
+                        else:
+                            openTut()
+                            tutOpen = True
+                            break
+                    if tutOpen == False:
+                        raise ElementNotInteractableException
+                except (ElementNotInteractableException, ElementClickInterceptedException, TimeoutException):
                     print("No Courses Found")
                 else:
                     print("Found Course (0 of 2)")
@@ -247,7 +266,14 @@ def openTut():
         else:
             logger.debug("Tutorial Already Complete")
             logger.debug('TutAlreadyComplete')
-            logger.error('Would Attempt to Open Test')
+            logger.error('Attempting to Open Test')
+            
+            try:
+                openMasteryTest()
+            except SyntaxError:
+                print("un oh?")
+
+
             closeCourseBtnArray = driver.find_elements_by_xpath("//span[@class='ico closeCardIco']")
             i = 0
             for closeCourseBtn in closeCourseBtnArray:
@@ -296,11 +322,12 @@ def completeTut():
 
         isAnswerBtn2()
 
+        isAnswerBtn3()
+
         isFinished()
 
 def openMasteryTest():
         try:
-
             masterytestBtn = driver.find_element_by_xpath("//span[contains(text(), 'Mastery Test')]")
             driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", masterytestBtn)
             WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//span[contains(text(), 'Mastery Test')]"))).click() 
@@ -309,20 +336,142 @@ def openMasteryTest():
         
         else:
             logger.debug("Mastery Test Opened")
+            completeMasteryTest()
 
 def completeMasteryTest():
     logger.debug("in completeMasterTest()")
-    # startTestBtn = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='mastery-test-start']"))
+    try:
+        startTestBtn = WebDriverWait(driver, .5).until(lambda driver: driver.find_element_by_xpath("//button[@class='mastery-test-start']"))
+    except TimeoutException:
+        startTestBtn = WebDriverWait(driver, .5).until(lambda driver: driver.find_element_by_xpath("//button[@class='level-assessment-start']"))
+
     logger.debug("starting test")
     startTestBtn.click()
-    logger.debug("clicked sTB")
-    # reviewAnsBtnPATH = "//button[@class='mastery-test-learner-review']"
-    # logger.debug("def reviewAnsBtn")
-    # reviewAnsBtn = driver.find_element_by_xpath(reviewAnsBtnPATH)
-    # logger.debug("clicking rab")
-    # driver.execute_script("arguments[0].click();", reviewAnsBtn)
-    
-    # //*[contains(text(),'Nicaragua') and @style='display: none;']
+    questionCountArray = driver.find_elements_by_xpath("//li[@class='drop-menu-item']")
+    questionCount = len(questionCountArray) + 1
+    print("Questions: " + str(questionCount))
+    for _ in range(questionCount):
+        queryArray = []
+        # answerArray=[]
+        print("line 1 time")
+        try:
+            line1 = driver.find_element_by_xpath("//div[@class='stem']//div/p/thspan")
+        except NoSuchElementException:
+            try:
+                line1 = driver.find_element_by_xpath("//div[@class='stem']//p/span")
+            except NoSuchElementException:
+                try:
+                    line1 = driver.find_element_by_xpath("//div[@class='stem']//div/thspan")
+                except NoSuchElementException:
+                    try:
+                        line1 = driver.find_element_by_xpath("//div[@class='stem']/div//p")
+                    except NoSuchElementException:
+                        print("imma kms")
+        print(line1.text)
+        queryArray.append(line1.text)            
+        # print(queryArray)
+
+        try:
+            restArray = driver.find_elements_by_xpath("//div[@class='stem']//p/thspan")  
+        except NoSuchElementException:
+            print("no rest") 
+        else:
+            for rest in restArray:
+                newRest = rest.text
+                queryArray.append(newRest)    
+                print(rest)
+
+        print(queryArray)
+        queryStr = ''.join(queryArray)
+        query = answers.query(queryStr)
+
+        foundAnswer = query['answer']
+        print(query['answer'])
+        
+        # while True:        
+            # finalAnswerOptionsArray = []
+            # try:
+            #     answerOptionsArray = driver.find_elements_by_xpath("//div[@class='content-inner hover-highlight']/thspan") #normal mpc
+            #     print("mpc 1")
+            #     print(answerOptionsArray)
+            #     for answerOption in answerOptionsArray:
+            #         print(answerOption)
+            #         newAnswerOption = answerOption.text
+            #         finalAnswerOptionsArray.append(newAnswerOption)
+            # except NoSuchElementException:
+            #     try:
+            #         answerOptionsArray = driver.find_element_by_xpath("//div[@class='content-inner hover-highlight']").text #noraml mpc type 2
+            #         print("mpc 2")
+            #         for answerOption in answerOptionsArray:
+            #             newAnswerOption = answerOption.text
+            #             finalAnswerOptionsArray.append(newAnswerOption)
+            #     except NoSuchElementException:
+            #         try:
+            #             answerOptionsArray = driver.find_elements_by_xpath("//ul[@class='multiresponse-choiceslist']//li//label").text #all that apply
+            #             print("mpc 3")
+            #             for answerOption in answerOptionsArray:
+            #                 newAnswerOption = answerOption.text
+            #                 finalAnswerOptionsArray.append(newAnswerOption)
+            #         except NoSuchElementException:
+            #             try:
+            #                 answerOptionsArray = driver.find_elements_by_xpath("//ul[@class='multiresponse-choiceslist']//li//label").text #all that apply
+            #                 print("mpc 4")
+            #                 for answerOption in answerOptionsArray:
+            #                     newAnswerOption = answerOption.text
+            #                     finalAnswerOptionsArray.append(newAnswerOption)
+            #             except NoSuchElementException:
+            #                 try:
+            #                     print("mpc 5")
+            #                     answerOptionsArray = driver.find_element_by_xpath("//span[@class='ht-interaction']//span[@class='hottext-mc-span hottext-mc-unselected']").text #select text)
+            #                     for answerOption in answerOptionsArray:
+            #                         newAnswerOption = answerOption.text
+            #                         finalAnswerOptionsArray.append(newAnswerOption)
+            #                 except:
+            #                     print("actually wtf ed")
+
+
+            # answerArray.append(finalAnswerOptionsArray)
+            # print(answerArray)
+        
+        answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + foundAnswer + "')]")
+        answerChoice.click()
+        
+        sleep(5)
+        print("next btn")
+        nextBtn = driver.find_element_by_xpath("//a[@class='player-button worksheets-submit' and contains(text(),'Next')]")
+        nextBtn.click()
+    print("done with test")
+    # okBtn = driver.find_element_by_xpath("//span[@class='ui-button-text' and contains(text(),'OK')]")
+    # okBtn.click()
+    # closeBtn = driver.find_element_by_xpath("//button[@class='mastery-test-learner-review']")
+    # closeBtn.click()
+
+def BigBoyTest():
+    try:
+        bbTestOpen = False
+        print("in bigboytest")
+        bbTestArray = driver.find_elements_by_xpath("//span[@class='ico testIco']")
+        for bbTest in bbTestArray:    
+            try:
+                print("is clickable?")
+                print(bbTest)
+                bbTest.click()
+            except ElementClickInterceptedException:
+                print("it isnt")
+                
+            else:
+                ("it is?")
+                bbTestOpen = True
+                break
+        if bbTestOpen == False:
+                    raise ElementNotInteractableException 
+
+    except (NoSuchElementException, ElementNotInteractableException):
+        print("No Big Tests Found")
+    else:
+        logger.debug("Mastery Test Opened")
+        completeMasteryTest()
+
 
 
 def isFRQ():
@@ -596,7 +745,7 @@ def isAnswerBtn():
 
 def isAnswerBtn2():
     try:
-        logger.debug("is there an answer button?")
+        logger.debug("is there an answer button 2?")
         driver.find_element_by_id("content-iframe")
         driver.switch_to.frame("content-iframe")
         logger.debug("switched to frame")
@@ -614,6 +763,29 @@ def isAnswerBtn2():
         logger.debug("clicked")
         driver.execute_script("arguments[0].click()", checkAnsBtnElm)
         driver.switch_to.parent_frame()
+
+def isAnswerBtn3():
+    try:
+        logger.debug("is there an answer button 3?")
+        driver.find_element_by_id("content-iframe")
+        driver.switch_to.frame("content-iframe")
+        logger.debug("switched to frame")
+        showAnsBtnPATH = "//button[@class='cw-button answerButton btn btn-info' and @style='display: none;']"
+        showAnsBtn = driver.find_element_by_xpath(showAnsBtnPATH)
+    except NoSuchElementException:
+        logger.debug("nope")
+        driver.switch_to.parent_frame()
+    else:
+        print("looking for done btn")
+        checkAnsBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='cw-button cw-disabled doneButton btn btn-info']"))
+        logger.debug("scroll to SubBtn")
+        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", checkAnsBtnElm)
+        logger.debug("click ans btn")
+        driver.execute_script("arguments[0].click()", showAnsBtn)
+        logger.debug("clicked")
+        driver.execute_script("arguments[0].click()", checkAnsBtnElm)
+        driver.switch_to.parent_frame()
+
 
 
 
@@ -679,6 +851,7 @@ def main(): # this the real one bois
 
     openCourse()
 
+    BigBoyTest()
     # sleep(2)
 
     tutfinished = False
