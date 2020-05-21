@@ -437,10 +437,12 @@ def completeMasteryTest():
 
         # answerArray.append(finalAnswerOptionsArray)
         # print(answerArray)
-
-        answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + foundAnswer + "')]")
-        answerChoice.click()
-
+        for answer in foundAnswer:
+            try:
+                answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + answer + "')]")
+                answerChoice.click()
+            except NoSuchElementException:
+                print("ans not available")
         sleep(5)
         print("next btn")
         nextBtn = driver.find_element_by_xpath("//a[@class='player-button worksheets-submit' and contains(text(),'Next')]")

@@ -39,7 +39,7 @@ def query(question, specificness=90):
     example call: print(query('who was thomas jefferson')['answer'])
     '''
     
-    answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
+    answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + 'answers.pkl', 'rb'))
 
     # generate list of all known questions
     logger.debug(answersDB)
