@@ -3,6 +3,7 @@ import pickle
 from pathlib import Path
 
 from fuzzywuzzy import fuzz, process
+from printy import printy, inputy
 
 '''
 this is a simple interface for getting answers to questions
@@ -60,15 +61,24 @@ def query(question, specificness=90):
         # make the request look like it came from a user browser EDIT: it now does come from a fkin user browser
         print(questionUrl)
         print('\n')
-        answerBrainly = input('answer: ')
 
-        confirm = input('CONFIRM that the answer TO ' + question + ' IS ' + answerBrainly + '? [y/n] ')
+        answersBrainly = []
+        moreAns = True
+        while moreAns:
+            answerCurrent = inputy(f'[g]\[press enter when finished]@ [n]answer #{len(answersBrainly)}: ')
+            if answerCurrent == '':
+                moreAns = False
+            else:
+                answersBrainly.append(answerCurrent)
+
+        confirm = inputy(f'CONFIRM that the answers TO [c]{question}@ ARE [n]{str(answersBrainly)}@? \[[n]y@/[r]n@] ')
         if confirm.lower() == 'y':
-            answersDB.append({'question': question, 'answer': answerBrainly})
+            answersDB.append({'question': question, 'answer': str(answersBrainly)})
             pickle.dump(answersDB, open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'wb'))
-            return {'question': question, 'answer': answerBrainly}
+            return {'question': question, 'answer': str(answersBrainly)}
         else:
             return query(question)
+            
     else:
         for answer in answersDB:
             if foundQuestion[0] == answer['question']:
@@ -84,5 +94,5 @@ def pickAnswer(question, choices):
     return choices.index(answerCorrect)
 
 if __name__ == "__main__":
-    print(query('who was thomas jefferson')['answer'])
-    print(pickAnswer('who was benjamin fanklin', ['thommy dad', 'beny boy']))
+    # print(query(input('question: '))['answer'])
+    print(query(input('ee')))
