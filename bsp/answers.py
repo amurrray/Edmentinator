@@ -39,7 +39,7 @@ def query(question, specificness=90):
     example call: print(query('who was thomas jefferson')['answer'])
     '''
     
-    answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + 'answers.pkl', 'rb'))
+    answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
 
     # generate list of all known questions
     logger.debug(answersDB)
@@ -65,7 +65,7 @@ def query(question, specificness=90):
         confirm = input('CONFIRM that the answer TO ' + question + ' IS ' + answerBrainly + '? [y/n] ')
         if confirm.lower() == 'y':
             answersDB.append({'question': question, 'answer': answerBrainly})
-            pickle.dump(answersDB, open(str(Path(__file__).resolve().parents[0]) + 'answers.pkl', 'wb'))
+            pickle.dump(answersDB, open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'wb'))
             return {'question': question, 'answer': answerBrainly}
         else:
             return query(question)
