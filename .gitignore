@@ -108,3 +108,4 @@ keys.py
 bsp/secrets.py
 debug.log
 .vscode
+*.pkl

@@ -4,9 +4,20 @@ from pathlib import Path
 
 from fuzzywuzzy import fuzz, process
 
+'''
+this is a simple interface for getting answers to questions
+since brainly uses javascript to render their search page,
+and datadome does a pretty good job of blocking headless browsers,
+im just going to leave it using manual input for answers for now.
+all you really have to do is click the link and copy paste, so its not
+too bad, and plus my original solution had you copying the datadome cookie
+from a real browser to the cli anyway, so was never fully automatic
+im sure theres a better way but this works for now.
+'''
+
 # setup logging
 logging.basicConfig(level=logging.INFO, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
-logger = logging.getLogger('main')
+logger = logging.getLogger('answers')
 logger.setLevel(logging.DEBUG)
 
 # constants
@@ -28,7 +39,7 @@ def query(question, specificness=90):
     example call: print(query('who was thomas jefferson')['answer'])
     '''
     
-    answersDB = pickle.load(open('answers.pkl', 'rb'))
+    answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
 
     # generate list of all known questions
     logger.debug(answersDB)
@@ -54,7 +65,7 @@ def query(question, specificness=90):
         confirm = input('CONFIRM that the answer TO ' + question + ' IS ' + answerBrainly + '? [y/n] ')
         if confirm.lower() == 'y':
             answersDB.append({'question': question, 'answer': answerBrainly})
-            pickle.dump(answersDB, open('answers.pkl', 'wb'))
+            pickle.dump(answersDB, open(str(Path(__file__).resolve().parents[0]) + 'answers.pkl', 'wb'))
             return {'question': question, 'answer': answerBrainly}
         else:
             return query(question)

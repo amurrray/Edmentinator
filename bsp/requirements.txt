@@ -2,3 +2,5 @@ bs4
 selenium
 pickledb
 fuzzywuzzy
+webdriver_manager
+printy
