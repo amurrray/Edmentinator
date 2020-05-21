@@ -23,6 +23,13 @@ def exportToJson():
     print('answers exported to answers.json')
 
 def main():
+    dbLen = str(len(pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))))
+    answersLen = str(len(json.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.json', 'r'))))
+
+    printy('local database has ' + dbLen + ' answers', 'p')
+    printy('json has ' + answersLen + ' answers', 'n')
+    print('')
+
     sel = inputy('[n]import@ database from json or [p]export@ database to json? \[[n]i@/[p]e@]').lower()
     if sel == 'i':
         printy('importing..', 'n')
