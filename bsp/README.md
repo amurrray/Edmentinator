@@ -1,0 +1,9 @@
+# The Edment-inator
+### it does what it do - automate Edmentum 
+
+![da doof](https://imgur.com/7jWRGMV.png)
+## why do?
+Edmentum is the makeshift chosen platform for LCPS 'Distanced Learning' in response to the global shutdown following the COVID-19 outbreak. Due to the general tedium of the work, as well as numerous reports of issues with the platform, such as inability to save work or straight up incorrect questions, the respected artist and esteemed penny collector Aidan Murray decided to create a program to automate the completion of Edmentum courses.
+
+## what do?
+![da doof](https://i.imgur.com/boNLDMB.png)
