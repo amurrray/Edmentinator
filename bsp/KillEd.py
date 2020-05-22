@@ -361,6 +361,7 @@ def completeMasteryTest():
         queryArray = []
         # answerArray=[]
         print("line 1 time")
+        isDropdown = False
         try:
             line1 = driver.find_element_by_xpath("//div[@class='stem']//div/p/thspan")
         except NoSuchElementException:
@@ -373,7 +374,14 @@ def completeMasteryTest():
                     try:
                         line1 = driver.find_element_by_xpath("//div[@class='stem']/div//p")
                     except NoSuchElementException:
-                        print("question not found")
+                        try:
+                            line1DD = driver.find_elements_by_xpath("//div[@class='inline-choice-content interactive-content-block']/thspan").text
+                        except NoSuchElementException:
+                            print("No Questions Found")
+                        else:
+                            print("question type 5 found")
+                            print("!drop down select type!")
+                            isDropdown = True
                     else:
                         print("question type 4 found")
                 else:
@@ -383,9 +391,11 @@ def completeMasteryTest():
         else:
             print("question type 1 found")
 
-        print(line1.text)
-        queryArray.append(line1.text)
-        # print(queryArray)
+        if isDropdown == True:
+            dropdownline = ' '.join([str(elem) for elem in line1DD]) 
+            queryArray.append(dropdownline)
+        else:
+            queryArray.append(line1.text)
 
         try:
             restArray = driver.find_elements_by_xpath("//div[@class='stem']//p/thspan")
@@ -452,9 +462,19 @@ def completeMasteryTest():
             try:
                 print("//*[contains(text(),'" + str(answer) + "')]")
                 answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + str(answer) + "')]")
-                driver.execute_script("arguments[0].click()", answerChoice)
+                if isDropdown == True:
+                    dropdownboxArray = driver.find_elements_by_xpath("//select[@class='inlinechoice-select']")
+                    i = 0
+                    for dropdown in dropdownboxArray:
+                        dropdown.click()
+                        dropdown.send_keys(foundAnswer[i])
+                        dropdown.send_keys(Keys.ENTER)
+                        i += 1
+                    else:
+                        driver.execute_script("arguments[0].click()", answerChoice)
+
             except NoSuchElementException:
-                print("ans not available")
+                print("ans not available or drop down complete")
         
         sleep(.5)
         print("next btn")
