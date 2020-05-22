@@ -89,9 +89,11 @@ def pickAnswer(question, choices):
     answers must be a list of all the choices
     example call: print(pickAnswer('who was benjamin fanklin', ['thommy dad', 'beny boy']))
     '''
-    answer = query(question)['answer']
-    answerCorrect = process.extractOne(answer, choices)[0]
-    return choices.index(answerCorrect)
+    answers = query(question)['answer']
+    answersCorrect = []
+    for answer in answers:
+        answersCorrect.append(process.extractOne(answer, choices)[0])
+    return choices.index(answersCorrect)
 
 if __name__ == "__main__":
     # print(query(input('question: '))['answer'])
