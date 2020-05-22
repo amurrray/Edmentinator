@@ -373,7 +373,7 @@ def completeMasteryTest():
                     try:
                         line1 = driver.find_element_by_xpath("//div[@class='stem']/div//p")
                     except NoSuchElementException:
-                        print("imma kms")
+                        print("question not found")
                     else:
                         print("question type 4 found")
                 else:
@@ -382,7 +382,7 @@ def completeMasteryTest():
                 print("question type 2 found")
         else:
             print("question type 1 found")
-            
+
         print(line1.text)
         queryArray.append(line1.text)
         # print(queryArray)
@@ -447,13 +447,16 @@ def completeMasteryTest():
 
         # answerArray.append(finalAnswerOptionsArray)
         # print(answerArray)
+        print(foundAnswer)
         for answer in foundAnswer:
             try:
-                answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + answer + "')]")
-                answerChoice.click()
+                print("//*[contains(text(),'" + str(answer) + "')]")
+                answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + str(answer) + "')]")
+                driver.execute_script("arguments[0].click()", answerChoice)
             except NoSuchElementException:
                 print("ans not available")
-        sleep(5)
+        
+        sleep(.5)
         print("next btn")
         nextBtn = driver.find_element_by_xpath("//a[@class='player-button worksheets-submit' and contains(text(),'Next')]")
         nextBtn.click()
