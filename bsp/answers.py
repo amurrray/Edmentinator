@@ -19,7 +19,7 @@ im sure theres a better way but this works for now.
 # setup logging
 logging.basicConfig(level=logging.INFO, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
 logger = logging.getLogger('answers')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 # constants
 BASE_URL = "https://brainly.com/"
