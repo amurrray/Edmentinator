@@ -1,7 +1,7 @@
 import logging
 import os
 import answers
-from json import loads
+import json
 from pathlib import Path
 from secrets import MY_PASSWORD, MY_USERNAME
 from time import sleep
@@ -19,9 +19,6 @@ from webdriver_manager.chrome import ChromeDriverManager
 question = input("question: ")
 
 query = answers.query(question)
-print("\n")
-print(query['answer'])
 
-# it cool lol
-# im  
-# sory im playing stlaaris
+print("\n")
+print(query)
