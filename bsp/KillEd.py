@@ -873,14 +873,22 @@ def isAnswerBtn3():
         logger.debug("nope")
         driver.switch_to.parent_frame()
     else:
-        print("looking for done btn")
-        checkAnsBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='cw-button cw-disabled doneButton btn btn-info']"))
+        logger.debug("looking for done btn")
+        try:
+            foundDoneBtn = False
+            checkAnsBtnElm = WebDriverWait(driver, 2).until(lambda driver: driver.find_element_by_xpath("//button[@class='cw-button cw-disabled doneButton btn btn-info']"))
+        except TimeoutException:
+            pass
+        else:
+            foundDoneBtn = True
         logger.debug("scroll to SubBtn")
-        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", checkAnsBtnElm)
+        if foundDoneBtn == True:
+            driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", checkAnsBtnElm)
         logger.debug("click ans btn")
         driver.execute_script("arguments[0].click()", showAnsBtn)
         logger.debug("clicked")
-        driver.execute_script("arguments[0].click()", checkAnsBtnElm)
+        if foundDoneBtn == True:
+            driver.execute_script("arguments[0].click()", checkAnsBtnElm)
         driver.switch_to.parent_frame()
 
 

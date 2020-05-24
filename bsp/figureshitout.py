@@ -1,27 +1,31 @@
 import logging
-import os
 import answers
-from json import loads
-from pathlib import Path
-from secrets import MY_PASSWORD, MY_USERNAME
+import json
 from time import sleep
 
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.common.exceptions import MoveTargetOutOfBoundsException, NoSuchElementException, NoSuchFrameException, ElementNotInteractableException, TimeoutException, ElementClickInterceptedException
-from selenium.webdriver import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
-
 question = input("question: ")
-
+# what organization was not created during the war years?
 query = answers.query(question)
-print("\n")
-print(query['answer'])
 
-# it cool lol
-# im  
-# sory im playing stlaaris
+print("\n")
+json.loads(query['answer'])
+print(query['answer'])
+# foundAnswer1 = json.loads(query['answer'])
+# foundAnswer1 = json.loads(query['answer'])
+print("fuck")
+# print(foundAnswer1)
+# what you doin doofus
+# print the stupid thing use the debugger or just print doesn tmatter
+
+# your json file is wrong
+
+
+for answer in foundAnswer1['answer']:
+    print("//*[contains(text(),'" + str(answer) + "')]")       
+
+    #fuckin pull it
+    # you have caused me so much pain
+    # fkin pull before you add answersi told you i fixed it i told you i made the update for list based answers yo fs-jjs-iddls lkjndfokajk sdfodfks fjknanswers
+    # fifcoijfiodshj
+    # i fixed it
+    # you fuckin penut lid
