@@ -4,4 +4,3 @@ pickledb
 fuzzywuzzy
 webdriver_manager
 printy
-lxml
