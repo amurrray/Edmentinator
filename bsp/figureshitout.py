@@ -1,22 +1,6 @@
 import logging
-import os
 import answers
-import json
-from pathlib import Path
-from secrets import MY_PASSWORD, MY_USERNAME
-from time import sleep
-
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.common.exceptions import MoveTargetOutOfBoundsException, NoSuchElementException, NoSuchFrameException, ElementNotInteractableException, TimeoutException, ElementClickInterceptedException
-from selenium.webdriver import ActionChains
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
-
-question = input("question: ")
+question = 'where was george washington born'
 
 query = answers.query(question)
 
