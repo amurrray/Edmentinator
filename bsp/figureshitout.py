@@ -1,27 +1,29 @@
 import logging
 import answers
 import json
+from pathlib import Path
+from secrets import MY_PASSWORD, MY_USERNAME
 from time import sleep
 
 question = input("question: ")
 # what organization was not created during the war years?
 query = answers.query(question)
 
-print("\n")
-json.loads(query['answer'])
+# print("\n")
+# json.loads(query['answer'])
 print(query['answer'])
-# foundAnswer1 = json.loads(query['answer'])
+foundAnswer1 = query['answer']
 # foundAnswer1 = json.loads(query['answer'])
 print("fuck")
-# print(foundAnswer1)
+print(foundAnswer1)
 # what you doin doofus
 # print the stupid thing use the debugger or just print doesn tmatter
 
 # your json file is wrong
 
 
-for answer in foundAnswer1['answer']:
-    print("//*[contains(text(),'" + str(answer) + "')]")       
+# for answer in foundAnswer1['answer']:
+#     print("//*[contains(text(),'" + str(answer) + "')]")       
 
     #fuckin pull it
     # you have caused me so much pain
@@ -29,3 +31,6 @@ for answer in foundAnswer1['answer']:
     # fifcoijfiodshj
     # i fixed it
     # you fuckin penut lid
+
+print("\n")
+print(query)
