@@ -476,6 +476,7 @@ def completeMasteryTest():
                 print("//*[contains(text(),'" + str(answer) + "')]")
                 answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + str(answer) + "')]")
                 if isDropdown == True:
+                    logger.debug("dropwdown time")
                     dropdownboxArray = driver.find_elements_by_xpath("//select[@class='inlinechoice-select']")
                     i = 0
                     for dropdown in dropdownboxArray:
@@ -483,8 +484,8 @@ def completeMasteryTest():
                         dropdown.send_keys(foundAnswer[i])
                         dropdown.send_keys(Keys.ENTER)
                         i += 1
-                    else:
-                        driver.execute_script("arguments[0].click()", answerChoice)
+                else:
+                    driver.execute_script("arguments[0].click()", answerChoice)
 
             except NoSuchElementException:
                 print("ans not available")
@@ -493,11 +494,12 @@ def completeMasteryTest():
         print("next btn")
         nextBtn = driver.find_element_by_xpath("//a[@class='player-button worksheets-submit' and contains(text(),'Next')]")
         nextBtn.click()
+        sleep(1)
     print("done with test")
-    # okBtn = driver.find_element_by_xpath("//span[@class='ui-button-text' and contains(text(),'OK')]")
-    # okBtn.click()
-    # closeBtn = driver.find_element_by_xpath("//button[@class='mastery-test-learner-review']")
-    # closeBtn.click()
+    okBtn = driver.find_element_by_xpath("//span[@class='ui-button-text' and contains(text(),'OK')]")
+    okBtn.click()
+    closeBtn = driver.find_element_by_xpath("//button[@class='mastery-test-exit blue']")
+    closeBtn.click()
 
 
 def BigBoyTest():
@@ -939,6 +941,34 @@ def isFinished():
     if currentNUM == totalNUM:
         logger.debug("Tutorial Complete")
         driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click()  # closes tutorial
+        isComplete()
+
+def isComplete():
+    try:
+        driver.find_element_by_xpath("//header[@id='mainHeader']")
+    except NoSuchElementException:
+        pass
+    else:
+        logger.debug('in course selection')
+    doShit()
+
+
+def doShit():
+
+    openCourse()
+
+    BigBoyTest()
+    # sleep(2)
+
+    tutfinished = False
+
+    while True:
+        completeTut()
+        driver.switch_to.parent_frame()
+        if tutfinished == True:
+            break
+
+
 
 
 def main():  # this the real one bois
@@ -978,19 +1008,7 @@ def main():  # this the real one bois
     assignmentSelect(assignments)
     # sleep(.5)
 
-    openCourse()
-
-    BigBoyTest()
-    # sleep(2)
-
-    tutfinished = False
-
-    while True:
-        completeTut()
-        driver.switch_to.parent_frame()
-        if tutfinished == True:
-            break
-
+    doShit()
 
 if __name__ == "__main__":
     main()
