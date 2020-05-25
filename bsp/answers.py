@@ -73,9 +73,9 @@ def query(question, specificness=90):
 
         confirm = inputy(f'CONFIRM that the answers TO [c]{question}@ ARE [n]{str(answersBrainly)}@? \[[n]y@/[r]n@] ')
         if confirm.lower() == 'y':
-            answersDB.append({'question': question, 'answer': str(answersBrainly)})
+            answersDB.append({'question': question, 'answer': answersBrainly})
             pickle.dump(answersDB, open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'wb'))
-            return {'question': question, 'answer': str(answersBrainly)}
+            return {'question': question, 'answer': answersBrainly}
         else:
             return query(question)
             
@@ -96,5 +96,4 @@ def pickAnswer(question, choices):
     return choices.index(answersCorrect)
 
 if __name__ == "__main__":
-    # print(query(input('question: '))['answer'])
-    print(query(input('ee')))
+    print(query(input('question: '))['answer'])
