@@ -25,8 +25,6 @@ logger.setLevel(logging.INFO)
 BASE_URL = "https://brainly.com/"
 DEBUG = True
 
-# pickle.dump([{'question': 'where was george washington born', 'answer': 'westmoreland country virginia va'}], open('answers.pkl', 'wb'))
-
 def query(question, specificness=90):
     '''
     returns an object in the format {'question': question, 'answer': answer}
@@ -39,8 +37,10 @@ def query(question, specificness=90):
 
     example call: print(query('who was thomas jefferson')['answer'])
     '''
-    
-    answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
+    try:
+        answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
+    except FileNotFoundError:
+        pickle.dump([], open('answers.pkl', 'wb'))
 
     # generate list of all known questions
     logger.debug(answersDB)
@@ -56,7 +56,11 @@ def query(question, specificness=90):
 
     if foundQuestion[1] < specificness: # if the found question wasnt close enough to our question, get the answer to our question
         # generate question url so that the user can get datadome key
-        questionUrl = BASE_URL + 'app/ask?entry=top&q=' + question.replace(' ', '+')
+        question = question.replace(' ', '+')
+        question = question.replace("'", "\'")
+        question = question.replace('"', '\"')
+        question = question.replace('’', "\'")
+        questionUrl = f'{BASE_URL}app/ask?entry=top&q={question}'
 
         # make the request look like it came from a user browser EDIT: it now does come from a fkin user browser
         print(questionUrl)
