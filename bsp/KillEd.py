@@ -5,7 +5,7 @@ from pathlib import Path
 from random import randint
 from secrets import MY_PASSWORD, MY_USERNAME
 from time import sleep
-
+# 
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.common.exceptions import (ElementClickInterceptedException,
@@ -83,7 +83,7 @@ class TableThings:
         noOfRows = len(self.table.find_elements_by_xpath("//tr")) - 1
         # logger.debug("noOfRows: " + str(noOfRows))
         # get number of columns
-        noOfColumns = len(self.table.find_elements_by_xpath("//tr[2]/th"))
+        noOfColumns = len(self.table.find_elements_by_xpath("//tr[2]/td"))
         # logger.debug("noOfColumns: " + str(noOfColumns))
         allData = []
         # iterate over the rows, to ignore the headers we have started the i with '1'
@@ -553,6 +553,13 @@ def isFRQ():
         for frqFrame in count_arr:
             try:  # grabs chart answer
                 logger.debug("looking for table ans")
+
+                # grab answer table using soup
+                page_source = driver.page_source
+                soup = BeautifulSoup(page_source, 'lxml')
+                answerTables = soup.find_all('div', class_='explanation fade in')
+                for answerTable in answerTables:
+                    print(answerTable)
                 try:
                     try:
                         arrayAnswerBtn = driver.find_element_by_xpath("//button[@class='buttonExplanationToggle' and @style='display:none;']")
@@ -629,6 +636,11 @@ def isFRQ():
                 TableData = TableThings(tableElm).get_all_data()
 
                 logger.debug("Question Table: " + str(TableData))
+                for x in TableData:
+                    for y in x:
+                        print(y, end=' ')
+                    print()
+
                 try:
                     logger.debug("AnswerTable: " + str(AnswerTable))
                     for x in AnswerTable:

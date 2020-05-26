@@ -1,14 +1,13 @@
+from bs4 import BeautifulSoup
 import logging
-import answers
-import json
 
-question = 'who was the brew man'
+html = ''
 
-query = answers.query(question)
+with open('cum.html', 'r') as htmlREALLY:
+        html = htmlREALLY.read()
 
-print(query)
-# json.loads(query)
-print(query['answer'])
+soup = BeautifulSoup(html, 'lxml')
 
-for answer in query['answer']:
-        print("//*[contains(text(),'" + str(answer) + "')]")       
+# soup.find_all(class="explanation fade in")
+fuck = soup.find_all('span', class_="explanationMessage")
+print(fuck)
