@@ -10,6 +10,11 @@ from printy import printy, inputy
 logging.basicConfig(level=logging.DEBUG, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
 logger = logging.getLogger('database')
 
+try:
+    pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
+except FileNotFoundError:
+    pickle.dump([], open('answers.pkl', 'wb'))
+
 def importFromJson():
     answers = json.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.json', 'r'))
     copyfile(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', str(Path(__file__).resolve().parents[0]) + '/answers.BACKUP.pkl')

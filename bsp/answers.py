@@ -25,6 +25,11 @@ logger.setLevel(logging.INFO)
 BASE_URL = "https://brainly.com/"
 DEBUG = True
 
+try:
+    pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
+except FileNotFoundError:
+    pickle.dump([], open('answers.pkl', 'wb'))
+
 def query(question, specificness=90):
     '''
     returns an object in the format {'question': question, 'answer': answer}
@@ -37,10 +42,7 @@ def query(question, specificness=90):
 
     example call: print(query('who was thomas jefferson')['answer'])
     '''
-    try:
-        answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
-    except FileNotFoundError:
-        pickle.dump([], open('answers.pkl', 'wb'))
+    answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
 
     # generate list of all known questions
     logger.debug(answersDB)
