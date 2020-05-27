@@ -6,5 +6,3 @@ webdriver_manager
 printy
 lxml
 wheel
-scrapy
-scrapy-splash
