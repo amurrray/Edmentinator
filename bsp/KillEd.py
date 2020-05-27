@@ -346,7 +346,7 @@ def completeMasteryTest():
 
     logger.debug("starting test")
     startTestBtn.click()
-    sleep(1)
+    sleep(.5)
     questionCountArray = driver.find_elements_by_xpath("//li[@class='drop-menu-item']")
     questionCount = len(questionCountArray) + 1
     print("Questions: " + str(questionCount))
@@ -356,49 +356,62 @@ def completeMasteryTest():
         print("line 1 time")
         isDropdown = False
         try:
-            line1 = driver.find_element_by_xpath("//div[@class='stem']//div/p/thspan")
+            # searches for //em and //thespan within the two //div layers. (if both are found its a cut up sentence)
+            driver.find_element_by_xpath("//div[@class='stem']//div[@class='content-wrapper']//thespan")
+            driver.find_element_by_xpath("//div[@class='stem']//div[@class='content-wrapper']//em")
+            # creates array of all elements in the layer
+            cutQueryArray = driver.find_elements_by_xpath("//div[@class='stem']//div[@class='content-wrapper']//*")     
         except NoSuchElementException:
             try:
-                line1 = driver.find_element_by_xpath("//div[@class='stem']//p/span")
+                line1 = driver.find_element_by_xpath("//div[@class='stem']//div/p/thspan").text
             except NoSuchElementException:
                 try:
-                    line1 = driver.find_element_by_xpath("//div[@class='stem']//div/thspan")
+                    line1 = driver.find_element_by_xpath("//div[@class='stem']//p/span").text
                 except NoSuchElementException:
                     try:
-                        line1 = driver.find_element_by_xpath("//div[@class='stem']/div//p")
+                        line1 = driver.find_element_by_xpath("//div[@class='stem']//div/thspan").text
                     except NoSuchElementException:
                         try:
-                            line1DD = driver.find_elements_by_xpath("//div[@class='inline-choice-content interactive-content-block']/thspan").text
+                            line1 = driver.find_element_by_xpath("//div[@class='stem']/div//p").text
                         except NoSuchElementException:
-                            print("No Questions Found")
+                            try:
+                                line1DD = driver.find_elements_by_xpath("//div[@class='inline-choice-content interactive-content-block']/thspan").text
+                            except NoSuchElementException:
+                                print("No Questions Found")
+                            else:
+                                print("question type 5 found")
+                                print("!drop down select type!")
+                                isDropdown = True
                         else:
-                            print("question type 5 found")
-                            print("!drop down select type!")
-                            isDropdown = True
+                            print("question type 4 found")
                     else:
-                        print("question type 4 found")
+                        print("question type 3 found")
                 else:
-                    print("question type 3 found")
+                    print("question type 2 found")
             else:
-                print("question type 2 found")
+                print("question type 1 found")
         else:
-            print("question type 1 found")
+            print("cut up text found")
+            # combines all the text into a str var
+            for cutQuery in cutQueryArray:
+                line1 += cutQuery.text
 
         if isDropdown == True:
             dropdownline = ' '.join([str(elem) for elem in line1DD]) 
             queryArray.append(dropdownline)
         else:
-            queryArray.append(line1.text)
+            # logger.debug("not drop down")
+            queryArray.append(line1)
 
-        try:
-            restArray = driver.find_elements_by_xpath("//div[@class='stem']//p/thspan")
-        except NoSuchElementException:
-            print("no rest")
-        else:
-            for rest in restArray:
-                newRest = rest.text
-                queryArray.append(newRest)
-                print(rest)
+        # try:
+        #     restArray = driver.find_elements_by_xpath("//div[@class='stem']//p/thspan")
+        # except NoSuchElementException:
+        #     print("no rest")
+        # else:
+        #     for rest in restArray:
+        #         newRest = rest.text
+        #         queryArray.append(newRest)
+        #         print(rest)
 
         print(queryArray)
         queryStr = ''.join(queryArray)
@@ -468,6 +481,22 @@ def completeMasteryTest():
 
             except NoSuchElementException:
                 logger.debug("ans not available")
+                try:
+                    # splits answer up word for word
+                    splitAnsArray = str(answer).split()
+                    for word in splitAnsArray:
+                        try:
+                            answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + str(word) + "')]")
+                        except:
+                            pass
+                        else:
+                            logger.debug("answer found through split")
+                            driver.execute_script("arguments[0].click()", answerChoice)
+                            break
+                except:
+                    logger.debug("answer still not found")
+                    # possibly drag/drop of input
+                    # try:
 
         sleep(.5)
         nextBtn = driver.find_element_by_xpath("//a[@class='player-button worksheets-submit' and contains(text(),'Next')]")
@@ -476,7 +505,7 @@ def completeMasteryTest():
     logger.debug("done with test")
     okBtn = driver.find_element_by_xpath("//span[@class='ui-button-text' and contains(text(),'OK')]")
     okBtn.click()
-    closeBtn = driver.find_element_by_xpath("//button[@class='mastery-test-exit blue']")
+    closeBtn = driver.find_element_by_xpath("//button[@type='button' and contains(text(),'Close and return to your activities')]")
     closeBtn.click()
 
 
