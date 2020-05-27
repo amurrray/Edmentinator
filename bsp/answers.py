@@ -53,7 +53,6 @@ def query(question, specificness=90):
 
     # find the closest match to our question
     foundQuestion = process.extractOne(question, knownQuestions)
-    print('\n')
     logger.debug('found question: ' + foundQuestion[0] + ', with confidence ' + str(foundQuestion[1]))
 
     if foundQuestion[1] < specificness: # if the found question wasnt close enough to our question, get the answer to our question
