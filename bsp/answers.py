@@ -100,5 +100,18 @@ def pickAnswer(question, choices):
         answersCorrect.append(process.extractOne(answer, choices)[0])
     return choices.index(answersCorrect)
 
+def addDragAnswer(question, dragBoxes, dragBoxAnswers):
+    '''
+    inserts a drag and drop question answer to the database
+    dragBoxes is a list of ids of the dragndrop boxes
+    dragBoxAnswers is a list of the ids of the locations the aforementioned boxes must go to
+    this is all kinda open ended so its up to you how you handle it aidan, to retrieve you can just use query
+    example return of a drag question
+    {'question': question, 'questionType': 'drag', 'answer': {'dragBoxes': dragBoxes, 'dragBoxAnswers': dragBoxAnswers}}
+    '''
+    answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
+    answersDB.append({'question': question, 'questionType': 'drag', 'answer': {'dragBoxes': dragBoxes, 'dragBoxAnswers': dragBoxAnswers}})
+    pickle.dump(answersDB, open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'wb'))
+
 if __name__ == "__main__":
     print(query(input('question: '))['answer'])
