@@ -30,7 +30,7 @@ try:
 except FileNotFoundError:
     pickle.dump([], open('answers.pkl', 'wb'))
 
-def query(question, specificness=90):
+def query(question, questionType, specificness=90):
     '''
     returns an object in the format {'question': question, 'answer': answer}
     if the answer is not found in the database, manual input of the answer
@@ -78,9 +78,9 @@ def query(question, specificness=90):
 
         confirm = inputy(f'CONFIRM that the answers TO [c]{question}@ ARE [n]{str(answersBrainly)}@? \[[n]y@/[r]n@] ')
         if confirm.lower() == 'y':
-            answersDB.append({'question': question, 'answer': answersBrainly})
+            answersDB.append({'question': question, 'questionType': questionType, 'answer': answersBrainly})
             pickle.dump(answersDB, open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'wb'))
-            return {'question': question, 'answer': answersBrainly}
+            return {'question': question, 'questionType': questionType, 'answer': answersBrainly}
         else:
             return query(question)
             

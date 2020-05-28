@@ -109,3 +109,4 @@ bsp/secrets.py
 debug.log
 .vscode
 *.pkl
+creds.json
