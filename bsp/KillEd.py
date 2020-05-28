@@ -21,7 +21,7 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-import answers
+import answers, complimentinator
 
 # setup logging
 logging.basicConfig(level=logging.INFO, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
@@ -882,8 +882,15 @@ def isFRQ():
                     logger.debug("normal frq")
                     answer = driver.find_element_by_xpath("//p")
                     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", answer)
-                    answer.send_keys('.')  # REPLACE WITH VAR TO ANSWER
-                    logger.debug("switching frame")
+                    # if its a self evaluation, use zeks complimentinator script
+                    driver.switch_to.parent_frame()
+                    soup = BeautifulSoup(driver.page_source, 'lxml')
+                    selfEval = soup.find_all(text='How did you do?')
+                    driver.switch_to.frame(frqFrame)
+                    if len(selfEval) != 0 and count_arr.index(frqFrame) == len(count_arr) - 1: # if we on the last frq frame and its a selfeval
+                        answer.send_keys(str(complimentinator.generateSentence()))
+                    else:
+                        answer.send_keys('.')  # REPLACE WITH VAR TO ANSWER
                     driver.switch_to.parent_frame()
                     try:
                         logger.debug("looking for btn")
