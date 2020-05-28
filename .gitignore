@@ -105,8 +105,9 @@ venv.bak/
 keys.py
 .cache*
 
-bsp/secrets.py
+secrets.py
 debug.log
 .vscode
 *.pkl
 creds.json
+answers.json
