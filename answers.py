@@ -2,10 +2,10 @@ import logging
 import pickle
 from pathlib import Path
 
-from fuzzywuzzy import fuzz, process
+from fuzzywuzzy import process
 from printy import inputy, printy
 
-import database
+from database import checkIfSyncedUser, syncDB
 
 '''
 this is a simple interface for getting answers to questions
@@ -44,7 +44,7 @@ def query(question, questionType, specificness=90):
 
     example call: print(query('who was thomas jefferson')['answer'])
     '''
-    database.checkIfSyncedUser()
+    syncDB()
     answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
 
     # generate list of all known questions
@@ -79,8 +79,8 @@ def query(question, questionType, specificness=90):
             else:
                 answersBrainly.append(answerCurrent)
 
-        confirm = inputy(f'CONFIRM that the answers TO [c]{question}@ ARE [n]{str(answersBrainly)}@? \[[n]y@/[r]n@] ')
-        if confirm.lower() == 'y':
+        confirm = inputy(f'CONFIRM that the answers TO [c]{question}@ ARE [n]{str(answersBrainly)}@? \[[n]Y@/[r]n@] ')
+        if confirm.lower() != 'n':
             answersDB.append({'question': question, 'questionType': questionType, 'answer': answersBrainly})
             pickle.dump(answersDB, open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'wb'))
             return {'question': question, 'questionType': questionType, 'answer': answersBrainly}
@@ -91,17 +91,6 @@ def query(question, questionType, specificness=90):
         for answer in answersDB:
             if foundQuestion[0] == answer['question']:
                 return {'question': answer['question'], 'answer': answer['answer']}
-
-def pickAnswer(question, choices):
-    '''
-    answers must be a list of all the choices
-    example call: print(pickAnswer('who was benjamin fanklin', ['thommy dad', 'beny boy']))
-    '''
-    answers = query(question)['answer']
-    answersCorrect = []
-    for answer in answers:
-        answersCorrect.append(process.extractOne(answer, choices)[0])
-    return choices.index(answersCorrect)
 
 def addDragAnswer(question, dragBoxes, dragBoxAnswers):
     '''
@@ -117,4 +106,4 @@ def addDragAnswer(question, dragBoxes, dragBoxAnswers):
     pickle.dump(answersDB, open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'wb'))
 
 if __name__ == "__main__":
-    print(query(input('question: '))['answer'])
+    print(query(input('question: '), 'mcq')['answer'])

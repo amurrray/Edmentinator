@@ -12,8 +12,9 @@ from oauth2client.service_account import ServiceAccountCredentials
 from printy import inputy, printy
 
 # setup logging
-logging.basicConfig(level=logging.DEBUG, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
+logging.basicConfig(level=logging.INFO, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
 logger = logging.getLogger('database')
+logger.setLevel(logging.INFO)
 
 # json credentials
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
