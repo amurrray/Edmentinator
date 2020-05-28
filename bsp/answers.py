@@ -3,7 +3,9 @@ import pickle
 from pathlib import Path
 
 from fuzzywuzzy import fuzz, process
-from printy import printy, inputy
+from printy import inputy, printy
+
+import database
 
 '''
 this is a simple interface for getting answers to questions
@@ -42,6 +44,7 @@ def query(question, questionType, specificness=90):
 
     example call: print(query('who was thomas jefferson')['answer'])
     '''
+    database.checkIfSyncedUser()
     answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
 
     # generate list of all known questions

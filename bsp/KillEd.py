@@ -5,9 +5,9 @@ from pathlib import Path
 from random import randint
 from secrets import MY_PASSWORD, MY_USERNAME
 from time import sleep
-from printy import printy, inputy
 
 from bs4 import BeautifulSoup
+from printy import inputy, printy
 from selenium import webdriver
 from selenium.common.exceptions import (ElementClickInterceptedException,
                                         ElementNotInteractableException,
@@ -21,7 +21,9 @@ from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 
-import answers, complimentinator
+import answers
+import complimentinator
+import database
 
 # setup logging
 logging.basicConfig(level=logging.INFO, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
@@ -1267,6 +1269,7 @@ def doShit():
 
 
 def main():  # this the real one bois
+    database.checkIfSyncedUser()
     driver.get("https://launchpad.classlink.com/loudoun")
 
     userURL = "//input[@id='username']"

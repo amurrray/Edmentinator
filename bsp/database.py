@@ -116,6 +116,13 @@ def syncDB(onlyReturnDiff=False):
         sheet.batch_update([queuedToUpload])
         printy(f'successfully uploaded {len(sheetList) + len(values) - initSheetLen} entries to the sheet!', 'n')
 
+def checkIfSyncedUser():
+    syncDiff = syncDB(onlyReturnDiff=True)
+    if syncDiff['diff']:  # if we detect a difference between the sheet and our local db
+        sel = inputy(f'local database has {syncDiff["localDB"]} entries, while sheet has {syncDiff["sheet"]} entries. sync with sheet? \[Y/n\]', 'r>')
+        if sel.lower() != 'n':
+            syncDB()
+
 def main():
     args = parser.parse_args()
 
@@ -130,11 +137,7 @@ def main():
         answersLen = str(len(json.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.json', 'r'))))
 
         # if we detect a difference in the db's, ask if user wants to sync
-        syncDiff = syncDB(onlyReturnDiff=True)
-        if syncDiff['diff']: # if we detect a difference between the sheet and our local db
-            sel = inputy(f'local database has {syncDiff["localDB"]} entries, while sheet has {syncDiff["sheet"]} entries. sync with sheet? \[Y/n\]', 'r>')
-            if sel.lower() != 'n':
-                syncDB()
+        checkIfSyncedUser()
         
         # json/db stuff
         printy(f'local database has {dbLen} answers', 'p')
