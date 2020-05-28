@@ -7,3 +7,4 @@ printy
 lxml
 wheel
 gspread
+oauth2client
