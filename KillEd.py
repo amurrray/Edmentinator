@@ -594,20 +594,20 @@ def openMasteryTest():
 
 def completeMasteryTest():
     try:
-        startTestBtn = WebDriverWait(driver, .5).until(lambda driver: driver.find_element_by_xpath("//button[@class='mastery-test-start']"))
+        startTestBtn = WebDriverWait(driver, 2).until(lambda driver: driver.find_element_by_xpath("//button[@class='mastery-test-start']"))
     except TimeoutException:
-        startTestBtn = WebDriverWait(driver, .5).until(lambda driver: driver.find_element_by_xpath("//button[@class='level-assessment-start']"))
+        startTestBtn = WebDriverWait(driver, 2).until(lambda driver: driver.find_element_by_xpath("//button[@class='level-assessment-start']"))
 
     logger.debug("starting test")
     startTestBtn.click()
-    sleep(.5)
+    sleep(2)
     questionCountArray = driver.find_elements_by_xpath("//li[@class='drop-menu-item']")
     questionCount = len(questionCountArray) + 1
     print("Questions: " + str(questionCount))
     for _ in range(questionCount):
         queryArray = []
         isDropdown = False
-        sleep(.5)
+        WebDriverWait(driver, 4).until(lambda driver: driver.find_element_by_xpath("//div[@class='questions-container']"))
 
         # from the whole page, find just the question-revelvent html
         wholePageSoup = BeautifulSoup(driver.page_source, 'lxml')
@@ -693,10 +693,11 @@ def completeMasteryTest():
     logger.debug("done with test")
     okBtn = driver.find_element_by_xpath("//span[@class='ui-button-text' and contains(text(),'OK')]")
     okBtn.click()
-    closeBtn = driver.find_element_by_xpath("//button[@type='button' and contains(text(),'Close and return to your activities')]")
-    ActionChains(driver).move_to_element(closeBtn).perform()
-    sleep(5)
-    closeBtn.click()
+    # closeBtn = driver.find_element_by_xpath("//button[@type='button' and contains(text(),'Close and return to your activities')]")
+    # ActionChains(driver).move_to_element(closeBtn).perform()
+    WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//button[@type='button' and contains(text(),'Close and return to your activities')]"))).click()
+    # closeBtn.click()
+    # closeBtn.click()
     # closeBtn.click()
     # driver.execute_script("arguments[0].click()", closeBtn)
 
@@ -750,12 +751,9 @@ def isFRQ():
             driver.find_element_by_xpath("//button[@class='btn buttonCorrectToggle' and @style='display:none;']")
         except NoSuchElementException:
             logger.debug("well fuck ig")
-            pass
         else:
-            logger.debug("okay good")
             showAnswerBtnArray = driver.find_elements_by_xpath("//button[@class='btn buttonCorrectToggle' and @style='display:none;']")
             for showAns in showAnswerBtnArray:
-                logger.debug("in for")
                 driver.execute_script("arguments[0].click()", showAns)
                 submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
                 logger.debug("scroll to btn")
@@ -764,6 +762,27 @@ def isFRQ():
                 driver.execute_script("arguments[0].click()", submitBtnElm)
 
         for frqFrame in count_arr:
+
+            ### WEIRD SHIT
+            # im literally just skipping all the frq stuff rn (if theres a submit button) we can fix later ig but we need to get rolling
+            try:
+                logger.debug("looking for btn")
+                driver.find_element_by_xpath(
+                    "//button[@class='btn buttonDone' and @style='']")
+            except NoSuchElementException:
+                logger.debug("WEIRD SHIT")
+            else:
+                logger.debug("found btn")
+                submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
+                logger.debug("scroll to btn")
+                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
+                WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//button[@class='btn buttonDone' and @style='']")))
+                submitBtnElm.click()
+                sleep(.5)
+                break
+
+            ## END WEIRD SHIT
+
             try:  # grabs chart answer
                 logger.debug("looking for table ans")
                 try:
