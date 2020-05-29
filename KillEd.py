@@ -24,14 +24,14 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 import answers
 import complimentinator
-from database import checkIfSyncedUser
+from database import checkIfSyncedUser, syncDB
 
 # setup logging
 logging.basicConfig(level=logging.DEBUG, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
 logger = logging.getLogger('main')
 logger.setLevel(logging.DEBUG)
 # sync db
-checkIfSyncedUser()
+syncDB()
 
 # constants
 if os.name == 'nt':
@@ -268,10 +268,10 @@ def openCourseType2():
     sortNotStarted = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-notstarted']"))
     # we are currently above the array
     sortArray = [sortInProgress, sortNotMastered,sortNotStarted]
+    sleep(1)
     for sort in sortArray:
         sort.click()
         logger.debug("sorting")
-        sleep(1)
         try:
             # looks for all activities
             activityArray = driver.find_elements_by_xpath("//span[@class='ico oneSheetIco']")
@@ -377,15 +377,12 @@ def completeTut():
         # is navNext disabled?
         driver.find_element_by_xpath("//button[@class='tutorial-nav-next disabled']")
 
-    except NoSuchElementException:
+    except:
         logger.debug('navNext is not disabled, moving to next')
         WebDriverWait(driver, 20).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
-        sleep(.5)
         completeTut()
     else:
         logger.debug('navNext is disabled, work to be done..')
-
-        sleep(.5)
 
         isFRQ()
 
@@ -684,13 +681,13 @@ def completeMasteryTest():
 
     logger.debug("starting test")
     startTestBtn.click()
-    sleep(2)
     questionCountArray = driver.find_elements_by_xpath("//li[@class='drop-menu-item']")
     questionCount = len(questionCountArray) + 1
     print("Questions: " + str(questionCount))
     for _ in range(questionCount):
         queryArray = []
         isDropdown = False
+        sleep(2)
         WebDriverWait(driver, 4).until(lambda driver: driver.find_element_by_xpath("//div[@class='questions-container']"))
 
         # from the whole page, find just the question-revelvent html
@@ -702,7 +699,7 @@ def completeMasteryTest():
         possibleQuestions = []
 
         for element in possibleQuestionElements:
-            if element.text.count('?') != 0:
+            if element.text.count('?') != 0 or element.text.lower().count('which') != 0 or element.text.lower().count('what') != 0 or element.text.lower().count('who') != 0:
                 logger.debug(element.text)
                 possibleQuestions.append(element.text)
 
@@ -715,11 +712,25 @@ def completeMasteryTest():
             isDropdown = True
 
         if isDropdown == True:
-            dropdownline = ' '.join([str(elem) for elem in line1DD]) 
-            queryArray.append(dropdownline)
             questionType = 'dropdown'
+            queryArray.append(question)
+
+            queryStr = ''.join(queryArray)
+            query = answers.query(queryStr, questionType)
+
+            foundAnswer = query['answer']
+            for answer in foundAnswer:
+                logger.debug("dropwdown question")
+                dropdownboxArray = driver.find_elements_by_xpath("//select[@class='inlinechoice-select']")
+                i = 0
+                for dropdown in dropdownboxArray:
+                    dropdown.click()
+                    dropdown.send_keys(foundAnswer[i])
+                    dropdown.send_keys(Keys.ENTER)
+                    i += 1
+
         else:
-            logger.debug("not drop down")
+            logger.debug("multiple choice")
             queryArray.append(question)
             questionType = 'mcq'
 
@@ -732,58 +743,21 @@ def completeMasteryTest():
             answerChoicesText = questionSoup.findAll('div', {'class': 'multichoice-choice'})
             for i in answerChoicesText:
                 answerChoicesText[answerChoicesText.index(i)] = BeautifulSoup(str(i), 'lxml').find('div', {'class': 'content-inner hover-highlight'}).text
+            logger.debug('act '+ str(answerChoicesText))
 
             answerCorrect = process.extractOne(answers.query(question, 'mcq')['answer'][0], answerChoicesText)[0] # get the answer to the question then find its closest match out of our choices
             answerChoicesElement[answerChoicesText.index(answerCorrect)].click()
-            
-            # for answer in foundAnswer:
-            #     try:
-            #         answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + str(answer) + "')]")
-            #         if isDropdown == True:
-            #             logger.debug("dropwdown question")
-            #             dropdownboxArray = driver.find_elements_by_xpath("//select[@class='inlinechoice-select']")
-            #             i = 0
-            #             for dropdown in dropdownboxArray:
-            #                 dropdown.click()
-            #                 dropdown.send_keys(foundAnswer[i])
-            #                 dropdown.send_keys(Keys.ENTER)
-            #                 i += 1
-            #         else:
-            #             driver.execute_script("arguments[0].click()", answerChoice)
 
-            #     except NoSuchElementException:
-            #         logger.debug("ans not available")
-            #         try:
-            #             # splits answer up word for word
-            #             splitAnsArray = str(answer).split()
-            #             for word in splitAnsArray:
-            #                 try:
-            #                     answerChoice = driver.find_element_by_xpath("//*[contains(text(),'" + str(word) + "')]")
-            #                 except:
-            #                     pass
-            #                 else:
-            #                     logger.debug("answer found through split")
-            #                     driver.execute_script("arguments[0].click()", answerChoice)
-            #                     break
-            #         except:
-            #             logger.debug("answer still not found")
-            #             # possibly drag/drop of input
-
-            sleep(.5)
-            nextBtn = driver.find_element_by_xpath("//a[@class='player-button worksheets-submit' and contains(text(),'Next')]")
-            nextBtn.click()
-            sleep(1)
+        sleep(.5)
+        nextBtn = driver.find_element_by_xpath("//a[@class='player-button worksheets-submit' and contains(text(),'Next')]")
+        nextBtn.click()
+        sleep(1)
 
     logger.debug("done with test")
     okBtn = driver.find_element_by_xpath("//span[@class='ui-button-text' and contains(text(),'OK')]")
     okBtn.click()
-    # closeBtn = driver.find_element_by_xpath("//button[@type='button' and contains(text(),'Close and return to your activities')]")
-    # ActionChains(driver).move_to_element(closeBtn).perform()
     WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//button[@type='button' and contains(text(),'Close and return to your activities')]"))).click()
-    # closeBtn.click()
-    # closeBtn.click()
-    # closeBtn.click()
-    # driver.execute_script("arguments[0].click()", closeBtn)
+
 
 def BigBoyTest():
     try:
@@ -850,194 +824,6 @@ def isFRQ():
             driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
             driver.execute_script("arguments[0].click()", submitBtnElm)
             sleep(.5)
-
-#  +=+ OLD THING +=+
-
-        # count_arr = [str("mce_") + str(i) + str("_ifr") for i, frqFrame in enumerate(frqFrames, start=0)]
-        # logger.debug("found iframes: " + str(count_arr))  
-        
-        # # shows answers for items not in iframe
-        # try:
-        #     driver.find_element_by_xpath("//button[@class='btn buttonCorrectToggle' and @style='display:none;']")
-        # except NoSuchElementException:
-        #     logger.debug("well fuck ig")
-        #     pass
-        # else:
-        #     logger.debug("okay good")
-        #     showAnswerBtnArray = driver.find_elements_by_xpath("//button[@class='btn buttonCorrectToggle' and @style='display:none;']")
-        #     for showAns in showAnswerBtnArray:
-        #         logger.debug("in for")
-        #         driver.execute_script("arguments[0].click()", showAns)
-        #         submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
-        #         logger.debug("scroll to btn")
-        #         driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
-        #         WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//button[@class='btn buttonDone' and @style='']")))
-        #         driver.execute_script("arguments[0].click()", submitBtnElm)
-
-        # for frqFrame in count_arr:
-        #     try:  # grabs chart answer
-        #         logger.debug("looking for table ans")
-        #         try:
-        #             try:
-        #                 arrayAnswerBtn = driver.find_element_by_xpath("//button[@class='buttonExplanationToggle' and @style='display:none;']")
-        #                 driver.execute_script("arguments[0].click()", arrayAnswerBtn)
-        #             except NoSuchElementException:
-        #                 logger.debug("Cant find show answers btn")
-
-        #             tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table']")  # gets answer table if padding is 5
-        #         except NoSuchElementException:
-        #             try:
-        #                 tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-7 k-table']")  # gets answer table if padding is 7
-        #             except NoSuchElementException:
-        #                 try:
-        #                     tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-5 k-table bgc-gray-lighter']")
-        #                 except NoSuchElementException:
-        #                     tableAnswerElm = driver.find_element_by_xpath("//table[@class='ed border-on padding-7 k-table bgc-gray-lighter']")
-
-        #         AnswerTable = TableThings(tableAnswerElm).get_all_data()
-        #         logger.debug(AnswerTable)
-
-        #     except NoSuchElementException:
-        #         logger.debug("no table answer saved")
-
-        #     try:
-        #         driver.switch_to.frame(frqFrame)
-        #         logger.debug("in " + frqFrame)
-        #     except NoSuchFrameException:
-        #         driver.switch_to.frame("responseText_ifr")
-        #         logger.debug("Response Text iFrame")
-        #     # try statement to figure out if it chart or not
-        #     try:
-        #         logger.debug("table?")
-        #         try:
-        #             tableXPATH = '//table[@class="ed border-on padding-5 k-table mce-item-table"]'
-        #             driver.find_element_by_xpath(tableXPATH)
-        #         except NoSuchElementException:
-        #             tableXPATH = '//table[@class="ed border-on padding-7 k-table mce-item-table"]'
-        #             driver.find_element_by_xpath(tableXPATH)
-        #         logger.debug(tableXPATH)
-        #     except NoSuchElementException:
-        #         try:
-        #             logger.debug("Not Table")
-        #             driver.find_element_by_xpath("//p")
-        #         except NoSuchElementException:
-        #             logger.error("Cant find frq textbox or chart")
-        #         else:
-        #             logger.debug("normal frq")
-        #             answer = driver.find_element_by_xpath("//p")
-        #             driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", answer)
-
-        #             +-=-+-=-+ Zacks Baby +-=-+-=-+
-
-        #             # if its a self evaluation, use zeks complimentinator script
-        #             driver.switch_to.parent_frame()
-        #             soup = BeautifulSoup(driver.page_source, 'lxml')
-        #             selfEval = soup.find_all(text='How did you do?')
-        #             driver.switch_to.frame(frqFrame)
-        #             if len(selfEval) != 0 and count_arr.index(frqFrame) == len(count_arr) - 1: # if we on the last frq frame and its a selfeval
-        #                 answer.send_keys(str(complimentinator.generateSentence()))
-        #             else:
-        #                 answer.send_keys('.')  # REPLACE WITH VAR TO ANSWER
-        #             driver.switch_to.parent_frame()
-        #             try:
-        #                 logger.debug("looking for btn")
-        #                 driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']")
-        #             except NoSuchElementException:
-        #                 logger.debug("all buttons pressed, hopefully")
-        #             else:
-        #                 logger.debug("found btn")
-        #                 submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']"))
-        #                 logger.debug("scroll to btn")
-        #                 driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
-        #                 WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//button[@class='btn buttonDone' and @style='']")))
-        #                 submitBtnElm.click()
-        #                 sleep(.5)
-        #     else:
-        #         logger.debug("soup here, idk what the fuck anny of this is, and its broken, so ima just press the submit button")
-        #         # soup here, idk what the fuck anny of this is, and its broken, so ima just press the submit button
-
-        #         try:
-        #             driver.find_element_by_xpath("//p")
-        #         except:
-        #             try:
-        #                 logger.debug("looking for btn")
-        #                 driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']")
-        #             except NoSuchElementException:
-        #                 logger.debug("all buttons pressed, hopefully")
-        #             else:
-        #                 logger.debug("found btn")
-        #                 submitBtnElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(
-        #                     "//button[@class='btn buttonDone' and @style='']"))
-        #                 logger.debug("scroll to btn")
-        #                 driver.execute_script(
-        #                     "arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", submitBtnElm)
-        #                 WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable(
-        #                     (By.XPATH, "//button[@class='btn buttonDone' and @style='']")))
-        #                 submitBtnElm.click()
-        #                 sleep(.5)
-
-                # tableElm = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(tableXPATH))
-
-                # # logger.debug(tableElm)
-                # tableElmClass = tableElm.get_attribute("class")
-                # logger.debug(tableElmClass)
-                # # What the Fuck!
-                # TableData = TableThings(tableElm).get_all_data()
-
-                # logger.debug("Question Table: " + str(TableData))
-                # try:
-                #     logger.debug("AnswerTable: " + str(AnswerTable))
-                #     for x in AnswerTable:
-                #         for y in x:
-                #             print(y, end=' ')
-                #         print()
-                # except UnboundLocalError:
-                #     logger.debug("no Answer Table")
-                # # logger.debug(AnswerTable)
-
-                # columnNUM = TableThings(tableElm).get_column_count()
-                # logger.debug("# of Columns: "+str(columnNUM))
-                # doof = []
-                # logger.debug("doof: " + str(doof))
-
-                # for _ in range(int(columnNUM)):
-                #     doof.append(" ")
-
-                # for x in doof:
-                #     for y in x:
-                #         print(y, end=' ')
-                #     print()
-
-                # logger.debug("new doof: " + str(doof))
-                # logger.debug(TableData[1])
-
-                # # logger.debug("is" + str(doof) + "==" + str(TableData[1]))
-                # # if str(doof) == str(TableData[1]):
-                # #     continue
-                # # else:
-                # #     logger.debug("its not equal")
-                # #     driver.switch_to.parent_frame()
-                # #     break
-
-                # rowNUM = TableData.index(doof)
-                # logger.debug("Row #: "+str(rowNUM + 1))  # +1 because arrays start @ 0
-
-                # i = 1
-                # for _ in range(columnNUM):
-                #     logger.debug("in loop")
-                #     tableboxPATH = "//tr["+str(rowNUM + 2)+"]/td["+str(i)+"]"  # +2 to include table header row and arrays start at 0
-                #     logger.debug(tableboxPATH)
-                #     tableboxELM = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(tableboxPATH))
-                #     tableboxELM.send_keys(".")  # REPLACE WITH VAR TO ANSWER
-                #     i += 1
-                # driver.switch_to.parent_frame()
-                # logger.debug("chart complete")
-
-            # submittedArray = driver.find_elements_by_xpath("//button[@class='btn buttonDone' and @style='display: none;']")
-            # logger.debug(len(frqFrames))
-            # logger.debug(len(submittedArray))
-            # if len(frqFrames) == len(submittedArray):  # check if we are on the last one
-            #     break
         driver.switch_to.parent_frame()
         logger.debug("FRQ(s) Answered")
 
