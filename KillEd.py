@@ -263,9 +263,9 @@ def openCourse():
 def openCourseType2():  
     logger.debug("in CourseType2")
     # find/open started unit, then if one cant be found find/open new unit
-    sortInProgress = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-inprogress']"))
-    sortNotMastered = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-completed-not-mastered']"))
-    sortNotStarted = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-notstarted']"))
+    sortInProgress = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-inprogress']"))
+    sortNotMastered = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-completed-not-mastered']"))
+    sortNotStarted = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-notstarted']"))
     # we are currently above the array
     sortArray = [sortInProgress, sortNotMastered,sortNotStarted]
     for sort in sortArray:
@@ -764,11 +764,16 @@ def completeMasteryTest():
             query = answers.query(queryStr, questionType)
 
             foundAnswer = query['answer']
+            
+            logger.debug(foundAnswer)
 
             answerChoicesElement = driver.find_elements_by_class_name('multichoice-choice')
             answerChoicesText = questionSoup.findAll('div', {'class': 'multichoice-choice'})
             for i in answerChoicesText:
                 answerChoicesText[answerChoicesText.index(i)] = BeautifulSoup(str(i), 'lxml').find('div', {'class': 'content-inner hover-highlight'}).text
+            
+            # wait for page to load 
+            # WebDriverWait(driver, 2).until(lambda driver: driver.find_elements_by_xpath("//a[@class='player-button worksheets-submit' and contains(text(),'Next')]"))
 
             answerCorrect = process.extractOne(answers.query(question, 'mcq')['answer'][0], answerChoicesText)[0] # get the answer to the question then find its closest match out of our choices
             answerChoicesElement[answerChoicesText.index(answerCorrect)].click()
@@ -1329,17 +1334,20 @@ def isFinished():
     try:
         currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-current ng-binding']"))
         totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-total ng-binding']"))
-    except (NoSuchElementException, ValueError):
+        currentNUM = int(currentPage.text)
+        totalNUM = int(totalPage.text)
+        print(str(currentNUM)+" of "+str(totalNUM))
+    except (NoSuchElementException, ValueError, TimeoutError):
         logger.debug("refreshing")
         driver.refresh()
         logger.debug("refreshed")
         WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//header[@class='tutorial-viewport-header']"))
         currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-current ng-binding']"))
         totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-total ng-binding']"))
-
-    currentNUM = int(currentPage.text)
-    totalNUM = int(totalPage.text)
-    print(str(currentNUM)+" of "+str(totalNUM))
+        currentNUM = int(currentPage.text)
+        totalNUM = int(totalPage.text)
+        print(str(currentNUM)+" of "+str(totalNUM))
+    
     if currentNUM == totalNUM:
         logger.debug("Tutorial Complete")
         driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click()  # closes tutorial
@@ -1378,7 +1386,7 @@ def main():  # this the real one bois
     userURL = "//input[@id='username']"
     passURL = "//input[@id='password']"
     buttonURL = "//button[@id='signin']"
-    edButtonURL = "//div[@class='container-fluid result-container no-selection']//div[7]//div[1]"
+    edButtonURL = "//span[contains(text(), 'Edmentum')]"
 
     userElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(userURL))
     userElement.send_keys(MY_USERNAME)

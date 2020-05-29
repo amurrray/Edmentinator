@@ -32,7 +32,7 @@ try:
 except FileNotFoundError:
     pickle.dump([], open('answers.pkl', 'wb'))
 
-def query(question, questionType, specificness=90):
+def query(question, questionType, specificness=98):
     '''
     returns an object in the format {'question': question, 'answer': answer}
     if the answer is not found in the database, manual input of the answer
