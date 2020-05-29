@@ -243,8 +243,45 @@ def openCourse():
                         if tutOpen == False:
                             raise ElementNotInteractableException
                     except (ElementNotInteractableException, ElementClickInterceptedException, TimeoutException):
-                        logger.debug("No Courses Found")
-
+                            # tries to open courses athat are a different type
+                            try:
+                                # looks for all activities
+                                activityArray = driver.find_elements_by_xpath("//span[@class='ico oneSheetIco']")
+                                for activity in activityArray:
+                                    try: 
+                                        # scrolls to possible activity
+                                        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", activity)
+                                        activity.click()
+                                    except (ElementClickInterceptedException, ElementNotInteractableException, NoSuchElementException):
+                                        # if activity can't open it tries the next one in the array
+                                        pass
+                                    else:
+                                        logger.debug("activity opened")
+                                        try:
+                                            # sees if prgm is in Tut
+                                            driver.find_element_by_xpath("//h1//thspan[contains(text(), 'Tutorial')]")
+                                        except NoSuchElementException:
+                                            try:
+                                                # checks if prgm is in Practice
+                                                driver.find_element_by_xpath("//li[contains(text(), 'Practice')]")
+                                            except NoSuchElementException:
+                                                try:
+                                                    # checks if prgm is in Test
+                                                    driver.find_element_by_xpath("//li[contains(text(), 'Test')]")
+                                                except NoSuchElementException:
+                                                    logger.error("No one should see this... Ever.")
+                                                else:
+                                                    # runs complete test
+                                                    completeMasteryTest()
+                                            else:
+                                                # runs complete prac
+                                                completePractice()
+                                        else:
+                                            # runs complete tut
+                                            completeTut()
+                            except:
+                                logger.debug("not menu type 2")
+                                pass
                     else:
                         logger.debug("Found Course (0 of x)")
                         break
@@ -257,7 +294,7 @@ def openCourse():
         except SyntaxError:
             logger.error("if this runs imma kms")
     try:
-        openCourseType2()
+        logger.debug:("No Courses Found")
     except:
         pass
 
