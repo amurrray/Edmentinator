@@ -1,12 +1,3 @@
-import logging
-import pickle
-from pathlib import Path
-
-from fuzzywuzzy import process
-from printy import inputy, printy
-
-from database import checkIfSyncedUser, syncDB
-
 '''
 this is a simple interface for getting answers to questions
 since brainly uses javascript to render their search page,
@@ -17,6 +8,15 @@ too bad, and plus my original solution had you copying the datadome cookie
 from a real browser to the cli anyway, so was never fully automatic
 im sure theres a better way but this works for now.
 '''
+
+import logging
+import pickle
+from pathlib import Path
+
+from fuzzywuzzy import process
+from printy import inputy
+
+from database import syncDB
 
 # setup logging
 logging.basicConfig(level=logging.INFO, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
@@ -32,7 +32,7 @@ try:
 except FileNotFoundError:
     pickle.dump([], open('answers.pkl', 'wb'))
 
-def query(question, questionType, specificness=98):
+def query(question, questionType, specificness=95):
     '''
     returns an object in the format {'question': question, 'answer': answer}
     if the answer is not found in the database, manual input of the answer

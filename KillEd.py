@@ -781,7 +781,6 @@ def completeMasteryTest():
     questionCount = len(questionCountArray) + 1
     print("Questions: " + str(questionCount))
     for _ in range(questionCount):
-        sleep(1)
         WebDriverWait(driver, 4).until(lambda driver: driver.find_element_by_xpath("//div[@class='questions-container']"))
 
         # from the whole page, find just the question-revelvent html
@@ -789,21 +788,32 @@ def completeMasteryTest():
         questionContainer = wholePageSoup.find('div', {'class': 'questions-container'})
         questionSoup = BeautifulSoup(str(questionContainer), 'lxml')
 
-        possibleQuestionElements = questionSoup.findAll('div', {'class': 'stem'})
+        possibleQuestionElements = []
+        possibleQuestionElements.extend(questionSoup.findAll('div', {'class': 'stem'}))
+        possibleQuestionElements.extend(questionSoup.findAll('div', {'class': 'prompt visible'}))
         possibleQuestions = []
 
         for element in possibleQuestionElements:
-            if element.text.count('?') != 0 or element.text.lower().count('which') != 0 or element.text.lower().count('what') != 0 or element.text.lower().count('who') or element.text.lower().count('match') or element.text.lower().count('select') != 0:
-                logger.debug(element.text)
+            if element.text.count('?') != 0 or element.text.lower().count('which') != 0 or element.text.lower().count('what') != 0 or element.text.lower().count('who') or element.text.lower().count('match') or element.text.lower().count('select') != 0 or element.text.lower().count('decide') != 0:
                 possibleQuestions.append(element.text)
 
         question = ""
         for possibleQuestion in possibleQuestions: # if the question is spliced up, this should fix it (?)
             question += possibleQuestion
+        
+        # remove weird nonsense from question
+        question = question.replace('Select the correct answer.', '')
+        question = question.replace('Select all the correct answers.', '')
+        question = question.replace('\n', '').replace('\r', '').replace('\t', '').lstrip().rstrip()
+        logger.debug(question)
 
-        if len(questionSoup.findAll('div', {'class': 'draggable-container'})) != 0: # if its a drag and drop
+        if len(possibleQuestions) == 0:
+            logger.error("UNKOWN QUESTION TYPE")
+
+        if len(questionSoup.findAll('div', {'class': 'draggable-item'})) != 0: # if its a drag and drop
             logger.error('DRAG AND DROP IS WIP')
         elif len(questionSoup.findAll('div', {'class': 'inlinechoice-select'})) != 0: # if its a dropdown
+            logger.debug("dropdown format")
             questionType = 'dropdown'
             query = answers.query(question, questionType)
 
@@ -818,9 +828,6 @@ def completeMasteryTest():
                     dropdown.send_keys(Keys.ENTER)
                     i += 1
 
-        elif len(possibleQuestions) == 0:
-            logger.error("UNKOWN QUESTION TYPE")
-
         else: # multiple choice stuff
             if len(questionSoup.findAll('div', {'class': 'multichoice-choice'})) != 0: # multichoice format, most classes
                 logger.debug('multichoice format')
@@ -828,6 +835,14 @@ def completeMasteryTest():
                 answerChoicesText = questionSoup.findAll('div', {'class': 'multichoice-choice'})
                 for i in answerChoicesText:
                     answerChoicesText[answerChoicesText.index(i)] = BeautifulSoup(str(i), 'lxml').find('div', {'class': 'content-inner hover-highlight'}).text
+                logger.debug('answer choices '+ str(answerChoicesText))
+
+            elif len(questionSoup.findAll('div', {'class': 'multiresponse'})) != 0: # if its a multiresponse (checkboxes)
+                logger.debug('checkbox format')
+                answerChoicesElement = driver.find_elements_by_class_name('multiresponse-choice')
+                answerChoicesText = questionSoup.findAll('li', {'class': 'multiresponse-choice'})
+                for i in answerChoicesText:
+                    answerChoicesText[answerChoicesText.index(i)] = i.text.replace('\n', '').replace('\r', '').replace('\t', '').lstrip().rstrip()
                 logger.debug('answer choices '+ str(answerChoicesText))
 
             elif len(questionSoup.findAll('span', {'class': 'ht-interaction'})) != 0: # ht interaction format, usually for english

@@ -111,4 +111,8 @@ debug.log
 *.pkl
 creds.json
 answers.json
+
+# testing stuff
 souptest.py
+f.html
+f_files/
