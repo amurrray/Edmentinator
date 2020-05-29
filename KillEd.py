@@ -828,8 +828,10 @@ def completeMasteryTest():
                     dropdown.send_keys(Keys.ENTER)
                     i += 1
 
-        else: # multiple choice stuff
-            if len(questionSoup.findAll('div', {'class': 'multichoice-choice'})) != 0: # multichoice format, most classes
+        # multiple choice stuff
+        else:
+            # multichoice format, most classes
+            if len(questionSoup.findAll('div', {'class': 'multichoice-choice'})) != 0:
                 logger.debug('multichoice format')
                 answerChoicesElement = driver.find_elements_by_class_name('multichoice-choice')
                 answerChoicesText = questionSoup.findAll('div', {'class': 'multichoice-choice'})
@@ -837,7 +839,8 @@ def completeMasteryTest():
                     answerChoicesText[answerChoicesText.index(i)] = BeautifulSoup(str(i), 'lxml').find('div', {'class': 'content-inner hover-highlight'}).text
                 logger.debug('answer choices '+ str(answerChoicesText))
 
-            elif len(questionSoup.findAll('div', {'class': 'multiresponse'})) != 0: # if its a multiresponse (checkboxes)
+            # if its a multiresponse (checkboxes)
+            elif len(questionSoup.findAll('div', {'class': 'multiresponse'})) != 0:
                 logger.debug('checkbox format')
                 answerChoicesElement = driver.find_elements_by_class_name('multiresponse-choice')
                 answerChoicesText = questionSoup.findAll('li', {'class': 'multiresponse-choice'})
@@ -845,7 +848,8 @@ def completeMasteryTest():
                     answerChoicesText[answerChoicesText.index(i)] = i.text.replace('\n', '').replace('\r', '').replace('\t', '').lstrip().rstrip()
                 logger.debug('answer choices '+ str(answerChoicesText))
 
-            elif len(questionSoup.findAll('span', {'class': 'ht-interaction'})) != 0: # ht interaction format, usually for english
+            # ht interaction format, usually for english
+            elif len(questionSoup.findAll('span', {'class': 'ht-interaction'})) != 0:
                 logger.debug('ht interaction format')
                 answerChoicesElement = driver.find_elements_by_class_name('ht-interaction')
                 answerChoicesText = questionSoup.findAll('span', {'class': 'ht-interaction'})
@@ -853,7 +857,8 @@ def completeMasteryTest():
                     answerChoicesText[answerChoicesText.index(i)] = i.text.replace(' ', '+').replace("'", "\'").replace('"', '\"').replace('’', "\'")
                 logger.debug('answer choices ' + str(answerChoicesText))
 
-            answerCorrect = process.extractOne(answers.query(question, 'mcq')['answer'][0], answerChoicesText)[0] # get the answer to the question then find its closest match out of our choices
+            # get the answer to the question then find its closest match out of our choices
+            answerCorrect = process.extractOne(answers.query(question, 'mcq')['answer'][0], answerChoicesText)[0]
             answerChoicesElement[answerChoicesText.index(answerCorrect)].click()
             logger.debug(f'answer: {answerCorrect}')
 

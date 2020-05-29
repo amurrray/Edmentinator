@@ -52,7 +52,7 @@ def query(question, questionType, specificness=95):
     knownQuestions = []  # perhaps implement stop word filtering later on: https://en.wikipedia.org/wiki/Stop_words
     for answer in answersDB:
         knownQuestions.append(answer['question'])
-    logger.debug('all known questions:' + str(knownQuestions))
+    logger.debug(f'all known questions: {str(knownQuestions)}')
 
     # find the closest match to our question
     foundQuestion = process.extractOne(question, knownQuestions)
