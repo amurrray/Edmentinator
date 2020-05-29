@@ -111,3 +111,4 @@ debug.log
 *.pkl
 creds.json
 answers.json
+souptest.py

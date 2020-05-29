@@ -7,6 +7,7 @@ from secrets import MY_PASSWORD, MY_USERNAME
 from time import sleep
 from fuzzywuzzy import process
 
+from lxml import etree
 from bs4 import BeautifulSoup
 from printy import inputy, printy
 from selenium import webdriver
@@ -372,25 +373,22 @@ def openTut():
 
 
 def completeTut():
+    WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//header[@class='tutorial-viewport-header']"))
     try:
-        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//header[@class='tutorial-viewport-header']"))
         # is navNext disabled?
-        driver.find_element_by_xpath("//button[@class='tutorial-nav-next disabled']")
+        driver.switch_to.parent_frame()
+        # driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")
+        WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
+        logger.debug('navNext is not disabled, moving to next')
+        completeTut()
 
     except:
-        logger.debug('navNext is not disabled, moving to next')
-        WebDriverWait(driver, 20).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
-        completeTut()
-    else:
         logger.debug('navNext is disabled, work to be done..')
 
         isFRQ()
 
         isMPC()
 
-        # isDrag()
-
-        # ischeckboxMPC()
         isMultipageSlide()
 
         isAnswerBtn()
@@ -722,9 +720,7 @@ def completeMasteryTest():
     questionCount = len(questionCountArray) + 1
     print("Questions: " + str(questionCount))
     for _ in range(questionCount):
-        queryArray = []
-        isDropdown = False
-        sleep(2)
+        sleep(1)
         WebDriverWait(driver, 4).until(lambda driver: driver.find_element_by_xpath("//div[@class='questions-container']"))
 
         # from the whole page, find just the question-revelvent html
@@ -736,24 +732,19 @@ def completeMasteryTest():
         possibleQuestions = []
 
         for element in possibleQuestionElements:
-            if element.text.count('?') != 0 or element.text.lower().count('which') != 0 or element.text.lower().count('what') != 0 or element.text.lower().count('who') != 0:
+            if element.text.count('?') != 0 or element.text.lower().count('which') != 0 or element.text.lower().count('what') != 0 or element.text.lower().count('who') or element.text.lower().count('match') or element.text.lower().count('select') != 0:
                 logger.debug(element.text)
                 possibleQuestions.append(element.text)
 
         question = ""
-        for possibleQuestion in possibleQuestions:
+        for possibleQuestion in possibleQuestions: # if the question is spliced up, this should fix it (?)
             question += possibleQuestion
 
-        if len(possibleQuestions) == 0:
-            logger.debug("!drop down select type!")
-            isDropdown = True
-
-        if isDropdown == True:
+        if len(questionSoup.findAll('div', {'class': 'interactive-content'})) != 0: # if its a drag and drop
+            logger.error('DRAG AND DROP IS WIP')
+        elif len(questionSoup.findAll('div', {'class': 'inlinechoice-select'})) != 0: # if its a dropdown
             questionType = 'dropdown'
-            queryArray.append(question)
-
-            queryStr = ''.join(queryArray)
-            query = answers.query(queryStr, questionType)
+            query = answers.query(question, questionType)
 
             foundAnswer = query['answer']
             for answer in foundAnswer:
@@ -766,24 +757,29 @@ def completeMasteryTest():
                     dropdown.send_keys(Keys.ENTER)
                     i += 1
 
-        else:
-            logger.debug("multiple choice")
-            queryArray.append(question)
-            questionType = 'mcq'
+        elif len(possibleQuestions) == 0:
+            logger.error("UNKOWN QUESTION TYPE")
 
-            queryStr = ''.join(queryArray)
-            query = answers.query(queryStr, questionType)
+        else: # multiple choice stuff
+            if len(questionSoup.findAll('div', {'class': 'multichoice-choice'})) != 0: # multichoice format, most classes
+                logger.debug('multichoice format')
+                answerChoicesElement = driver.find_elements_by_class_name('multichoice-choice')
+                answerChoicesText = questionSoup.findAll('div', {'class': 'multichoice-choice'})
+                for i in answerChoicesText:
+                    answerChoicesText[answerChoicesText.index(i)] = BeautifulSoup(str(i), 'lxml').find('div', {'class': 'content-inner hover-highlight'}).text
+                logger.debug('answer choices '+ str(answerChoicesText))
 
-            foundAnswer = query['answer']
-
-            answerChoicesElement = driver.find_elements_by_class_name('multichoice-choice')
-            answerChoicesText = questionSoup.findAll('div', {'class': 'multichoice-choice'})
-            for i in answerChoicesText:
-                answerChoicesText[answerChoicesText.index(i)] = BeautifulSoup(str(i), 'lxml').find('div', {'class': 'content-inner hover-highlight'}).text
-            logger.debug('act '+ str(answerChoicesText))
+            elif len(questionSoup.findAll('span', {'class': 'ht-interaction'})) != 0: # ht interaction format, usually for english
+                logger.debug('ht interaction format')
+                answerChoicesElement = driver.find_elements_by_class_name('ht-interaction')
+                answerChoicesText = questionSoup.findAll('span', {'class': 'ht-interaction'})
+                for i in answerChoicesText:
+                    answerChoicesText[answerChoicesText.index(i)] = i.text.replace(' ', '+').replace("'", "\'").replace('"', '\"').replace('’', "\'")
+                logger.debug('answer choices ' + str(answerChoicesText))
 
             answerCorrect = process.extractOne(answers.query(question, 'mcq')['answer'][0], answerChoicesText)[0] # get the answer to the question then find its closest match out of our choices
             answerChoicesElement[answerChoicesText.index(answerCorrect)].click()
+            logger.debug(f'answer: {answerCorrect}')
 
         sleep(.5)
         nextBtn = driver.find_element_by_xpath("//a[@class='player-button worksheets-submit' and contains(text(),'Next')]")
@@ -831,11 +827,14 @@ def isFRQ():
         logger.debug("is not FRQ")
     else:
         logger.debug("is FRQ")
-        frqFrames = driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
-        logger.debug(str(len(frqFrames)) + " FRQs Found")
-        if len(frqFrames) == 0:
+        # use lxml to execute the xpath to see if these are fake frames
+        soup = BeautifulSoup(driver.page_source, 'lxml')
+        frqFramesSoup = soup.findAll('textarea', {'class': 'responseText'})
+        logger.debug(str(len(frqFramesSoup)) + " FRQs Found")
+        if len(frqFramesSoup) == 0:
             driver.switch_to.parent_frame()
             return
+        frqFrames = driver.find_elements_by_xpath('//*[@title="Rich Text Area. Press ALT-F9 for menu. Press ALT-F10 for toolbar. Press ALT-0 for help"]')
     try:
         try:
             driver.find_element_by_xpath("//button[@class='btn buttonCorrectToggle' and @style='display:none;']")
@@ -1134,14 +1133,10 @@ def isFinished():
 def isComplete():
     try:
         driver.find_element_by_xpath("//header[@id='mainHeader']")
-    except NoSuchElementException:
+    except:
         pass
     else:
         logger.debug('in course selection')
-    doShit()
-
-
-def doShit():
 
     openCourse()
 
@@ -1154,9 +1149,6 @@ def doShit():
         driver.switch_to.parent_frame()
         if tutfinished == True:
             break
-
-
-
 
 def main():  # this the real one bois
     driver.get("https://launchpad.classlink.com/loudoun")
@@ -1190,7 +1182,7 @@ def main():  # this the real one bois
         logger.debug('collecting assignments returned no assignments, retrying')
     assignmentSelect(assignments)
 
-    doShit()
+    isComplete()
 
 if __name__ == "__main__":
     main()

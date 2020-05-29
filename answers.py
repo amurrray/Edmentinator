@@ -85,7 +85,7 @@ def query(question, questionType, specificness=90):
             pickle.dump(answersDB, open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'wb'))
             return {'question': question, 'questionType': questionType, 'answer': answersBrainly}
         else:
-            return query(question)
+            return query(question, questionType)
             
     else:
         for answer in answersDB:
