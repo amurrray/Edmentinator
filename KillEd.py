@@ -740,7 +740,7 @@ def completeMasteryTest():
         for possibleQuestion in possibleQuestions: # if the question is spliced up, this should fix it (?)
             question += possibleQuestion
 
-        if len(questionSoup.findAll('div', {'class': 'interactive-content'})) != 0: # if its a drag and drop
+        if len(questionSoup.findAll('div', {'class': 'draggable-container'})) != 0: # if its a drag and drop
             logger.error('DRAG AND DROP IS WIP')
         elif len(questionSoup.findAll('div', {'class': 'inlinechoice-select'})) != 0: # if its a dropdown
             questionType = 'dropdown'
