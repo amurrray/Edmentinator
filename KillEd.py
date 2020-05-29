@@ -490,7 +490,44 @@ def completePractice():
                             textbox = driver.find_element_by_xpath("//input[@spellcheck='false']")
                             textbox.click()
                             textbox.send_keys(".")
-
+                            # submits answer
+                            logger.debug("submit time")
+                            subBtnArray = driver.find_elements_by_xpath("//a[@class='player-button worksheets-submit']")
+                            for subBtn in subBtnArray:        
+                                # cycles through subBtns
+                                try:
+                                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", subBtn)
+                                    subBtn.click()
+                                except:
+                                    pass
+                                else:
+                                    break
+                            try:
+                                # if the answers correct (or its second failed attemt), next btn is shown and can be clicked
+                                nextBtnArray = driver.find_elements_by_xpath("//a[@class='player-button worksheets-next']")
+                                for nextBtn in nextBtnArray:
+                                    try:
+                                        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", nextBtn)
+                                        nextBtn.click()
+                                    except (ElementNotInteractableException, ElementClickInterceptedException):
+                                        pass
+                                    else:
+                                        # moves onto next question
+                                        break
+                                # if all next btns dont work the answer wasnt correct and it tries again
+                                try:
+                                    retryBtnArray = driver.find_elements_by_xpath("//a[@class='player-button worksheets-retry']")
+                                    for retryBtn in retryBtnArray:
+                                        try:
+                                            retryBtn.click()
+                                        except(NoSuchElementException, ElementClickInterceptedException, ElementNotInteractableException):
+                                            pass
+                                        else:
+                                            break
+                                except:
+                                    pass
+                            except:
+                                pass
                     else:
                         driver.find_element_by_xpath("//div[@data-dropped='false']")
                         try:
