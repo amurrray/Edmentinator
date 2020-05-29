@@ -243,8 +243,45 @@ def openCourse():
                         if tutOpen == False:
                             raise ElementNotInteractableException
                     except (ElementNotInteractableException, ElementClickInterceptedException, TimeoutException):
-                        logger.debug("No Courses Found")
-
+                            # tries to open courses athat are a different type
+                            try:
+                                # looks for all activities
+                                activityArray = driver.find_elements_by_xpath("//span[@class='ico oneSheetIco']")
+                                for activity in activityArray:
+                                    try: 
+                                        # scrolls to possible activity
+                                        driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", activity)
+                                        activity.click()
+                                    except (ElementClickInterceptedException, ElementNotInteractableException, NoSuchElementException):
+                                        # if activity can't open it tries the next one in the array
+                                        pass
+                                    else:
+                                        logger.debug("activity opened")
+                                        try:
+                                            # sees if prgm is in Tut
+                                            driver.find_element_by_xpath("//h1//thspan[contains(text(), 'Tutorial')]")
+                                        except NoSuchElementException:
+                                            try:
+                                                # checks if prgm is in Practice
+                                                driver.find_element_by_xpath("//li[contains(text(), 'Practice')]")
+                                            except NoSuchElementException:
+                                                try:
+                                                    # checks if prgm is in Test
+                                                    driver.find_element_by_xpath("//li[contains(text(), 'Test')]")
+                                                except NoSuchElementException:
+                                                    logger.error("No one should see this... Ever.")
+                                                else:
+                                                    # runs complete test
+                                                    completeMasteryTest()
+                                            else:
+                                                # runs complete prac
+                                                completePractice()
+                                        else:
+                                            # runs complete tut
+                                            completeTut()
+                            except:
+                                logger.debug("not menu type 2")
+                                pass
                     else:
                         logger.debug("Found Course (0 of x)")
                         break
@@ -257,16 +294,16 @@ def openCourse():
         except SyntaxError:
             logger.error("if this runs imma kms")
     try:
-        openCourseType2()
+        logger.debug:("No Courses Found")
     except:
         pass
 
 def openCourseType2():  
     logger.debug("in CourseType2")
     # find/open started unit, then if one cant be found find/open new unit
-    sortInProgress = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-inprogress']"))
-    sortNotMastered = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-completed-not-mastered']"))
-    sortNotStarted = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-notstarted']"))
+    sortInProgress = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-inprogress']"))
+    sortNotMastered = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-completed-not-mastered']"))
+    sortNotStarted = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-notstarted']"))
     # we are currently above the array
     sortArray = [sortInProgress, sortNotMastered,sortNotStarted]
     sleep(1)
@@ -1129,17 +1166,20 @@ def isFinished():
     try:
         currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-current ng-binding']"))
         totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-total ng-binding']"))
-    except:
+        currentNUM = int(currentPage.text)
+        totalNUM = int(totalPage.text)
+        print(str(currentNUM)+" of "+str(totalNUM))
+    except (NoSuchElementException, ValueError, TimeoutError):
         logger.debug("refreshing")
         driver.refresh()
         logger.debug("refreshed")
         WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//header[@class='tutorial-viewport-header']"))
         currentPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-current ng-binding']"))
         totalPage = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//span[@class='tutorial-nav-progress-total ng-binding']"))
-
-    currentNUM = int(currentPage.text)
-    totalNUM = int(totalPage.text)
-    print(str(currentNUM)+" of "+str(totalNUM))
+        currentNUM = int(currentPage.text)
+        totalNUM = int(totalPage.text)
+        print(str(currentNUM)+" of "+str(totalNUM))
+    
     if currentNUM == totalNUM:
         logger.debug("Tutorial Complete")
         driver.find_element_by_xpath("//button[@class='tutorial-nav-exit']").click()  # closes tutorial
@@ -1171,7 +1211,7 @@ def main():  # this the real one bois
     userURL = "//input[@id='username']"
     passURL = "//input[@id='password']"
     buttonURL = "//button[@id='signin']"
-    edButtonURL = "//div[@class='container-fluid result-container no-selection']//div[7]//div[1]"
+    edButtonURL = "//span[contains(text(), 'Edmentum')]"
 
     userElement = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath(userURL))
     userElement.send_keys(MY_USERNAME)
