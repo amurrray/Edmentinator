@@ -86,7 +86,7 @@ def query(question, questionType, specificness=95):
             return {'question': question, 'questionType': questionType, 'answer': answersBrainly}
         else:
             return query(question, questionType)
-            
+
     else:
         for answer in answersDB:
             if foundQuestion[0] == answer['question']:

@@ -61,9 +61,10 @@ disable=
     protected-access,
     too-few-public-methods,
     # handled by black
-    format
-    bare-except
-    anomalous-backlash-in-string
+    format,
+    bare-except,
+    anomalous-backslash-in-string
+
     
 
 

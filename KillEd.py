@@ -7,9 +7,8 @@ from secrets import MY_PASSWORD, MY_USERNAME
 from time import sleep
 from fuzzywuzzy import process
 
-from lxml import etree
 from bs4 import BeautifulSoup
-from printy import inputy, printy
+from printy import printy
 from selenium import webdriver
 from selenium.common.exceptions import (ElementClickInterceptedException,
                                         ElementNotInteractableException,
@@ -25,7 +24,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 import answers
 import complimentinator
-from database import checkIfSyncedUser, syncDB
+from database import syncDB
 
 # setup logging
 logging.basicConfig(level=logging.DEBUG, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
@@ -44,7 +43,7 @@ else:
 CLASSLINK_PATH = str(Path(__file__).resolve().parents[0]) + '/classlink.crx'
 CHROME_OPTIONS = webdriver.ChromeOptions()
 CHROME_OPTIONS.add_extension(CLASSLINK_PATH)
-BASE_URL = "https://f1.app.edmentum.com/"
+BASE_URL = "https://f2.app.edmentum.com/"
 
 try:
     driver = webdriver.Chrome(ChromeDriverManager().install(), options=CHROME_OPTIONS)
@@ -834,10 +833,11 @@ def completeMasteryTest():
                 logger.debug('answer choices ' + str(answerChoicesText))
 
             # get the answer to the question then find its closest match out of our choices
-            answerCorrect = process.extractOne(answers.query(question, 'mcq')['answer'][0], answerChoicesText)[0]
-            # answerChoicesElement[answerChoicesText.index(answerCorrect)].click()
-            WebDriverWait(driver, 4).until(expected_conditions.element_to_be_clickable(answerChoicesElement[answerChoicesText.index(answerCorrect)]))
-            logger.debug(f'answer: {answerCorrect}')
+            for answer in answers.query(question, 'mcq')['answer']:
+                answerCorrect = process.extractOne(answer, answerChoicesText)[0]
+                answerChoicesElement[answerChoicesText.index(answerCorrect)].click()
+                # WebDriverWait(driver, 4).until(expected_conditions.element_to_be_clickable(answerChoicesElement[answerChoicesText.index(answerCorrect)]))
+                logger.debug(f'answer: {answerCorrect}')
 
         sleep(.5)
         nextBtn = driver.find_element_by_xpath("//a[@class='player-button worksheets-submit' and contains(text(),'Next')]")
