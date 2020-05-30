@@ -859,7 +859,8 @@ def completeMasteryTest():
 
             # get the answer to the question then find its closest match out of our choices
             answerCorrect = process.extractOne(answers.query(question, 'mcq')['answer'][0], answerChoicesText)[0]
-            answerChoicesElement[answerChoicesText.index(answerCorrect)].click()
+            # answerChoicesElement[answerChoicesText.index(answerCorrect)].click()
+            WebDriverWait(driver, 4).until(expected_conditions.element_to_be_clickable(answerChoicesElement[answerChoicesText.index(answerCorrect)]))
             logger.debug(f'answer: {answerCorrect}')
 
         sleep(.5)
