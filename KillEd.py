@@ -180,13 +180,16 @@ def assignmentSelect(assignments):
 
 def openCourse():
     # find/open started unit, then if one cant be found find/open new unit
-    sortInProgress = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-inprogress']"))
-    sortNotMastered = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-completed-not-mastered']"))
-    sortNotStarted = WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-notstarted']"))
+    sortInProgress = "//li[@id='tab-inprogress']"
+    # WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-inprogress']"))
+    sortNotMastered = "//li[@id='tab-completed-not-mastered']"
+    # WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-completed-not-mastered']"))
+    sortNotStarted = "//li[@id='tab-notstarted']"
+    # WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-notstarted']"))
     # we are currently above the array
     sortArray = [sortInProgress, sortNotMastered, sortNotStarted]
     for sort in sortArray:
-        sort.click()
+        WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, sort))).click()
         sleep(1)
         try:
             tutOpen = False
@@ -256,17 +259,28 @@ def openCourse():
                                         pass
                                     else:
                                         logger.debug("activity opened")
+                                        # WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//body[@class='player-body']"))
                                         try:
                                             # sees if prgm is in Tut
-                                            driver.find_element_by_xpath("//h1//thspan[contains(text(), 'Tutorial')]")
+                                            logger.debug("im going to kms")
+                                            WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//button[@class='tutorial-nav-next']")))
+                                            tutArray = WebDriverWait(driver, 1).until(lambda driver: driver.find_elements_by_xpath("//*[contains(text(), 'Tutorial')]"))
+                                            logger.debug("im not joking")
+                                            if len(tutArray) < 2:
+                                                logger.debug("this is the last straw")
+                                                raise NoSuchElementException
                                         except NoSuchElementException:
                                             try:
                                                 # checks if prgm is in Practice
-                                                driver.find_element_by_xpath("//li[contains(text(), 'Practice')]")
+                                                logger.debug("why am i here")
+                                                WebDriverWait(driver, 5).until(lambda driver: driver.find_element_by_xpath("//*[contains(text(), 'Practice')]"))
                                             except NoSuchElementException:
                                                 try:
                                                     # checks if prgm is in Test
-                                                    driver.find_element_by_xpath("//li[contains(text(), 'Test')]")
+                                                    WebDriverWait(driver, 5).until(lambda driver: driver.find_element_by_xpath("//*[contains(text(), 'Test')]"))
+                                                    testArray = WebDriverWait(driver, 1).until(lambda driver: driver.find_elements_by_xpath("//*[contains(text(), 'Test')]"))
+                                                    if len(testArray) < 2:
+                                                        raise NoSuchElementException
                                                 except NoSuchElementException:
                                                     logger.error("No one should see this... Ever.")
                                                 else:
@@ -297,56 +311,64 @@ def openCourse():
     except:
         pass
 
-def openCourseType2():  
-    logger.debug("in CourseType2")
-    # find/open started unit, then if one cant be found find/open new unit
-    sortInProgress = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-inprogress']"))
-    sortNotMastered = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-completed-not-mastered']"))
-    sortNotStarted = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-notstarted']"))
-    # we are currently above the array
-    sortArray = [sortInProgress, sortNotMastered,sortNotStarted]
-    sleep(1)
-    for sort in sortArray:
-        sort.click()
-        logger.debug("sorting")
-        try:
-            # looks for all activities
-            activityArray = driver.find_elements_by_xpath("//span[@class='ico oneSheetIco']")
-            for activity in activityArray:
-                try: 
-                    # scrolls to possible activity
-                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", activity)
-                    activity.click()
-                except (ElementClickInterceptedException, ElementNotInteractableException, NoSuchElementException):
-                    # if activity can't open it tries the next one in the array
-                    pass
-                else:
-                    logger.debug("activity opened")
-                    try:
-                        # sees if prgm is in Tut
-                        driver.find_element_by_xpath("//h1//thspan[contains(text(), 'Tutorial')]")
-                    except NoSuchElementException:
-                        try:
-                            # checks if prgm is in Practice
-                            driver.find_element_by_xpath("//li[contains(text(), 'Practice')]")
-                        except NoSuchElementException:
-                            try:
-                                # checks if prgm is in Test
-                                driver.find_element_by_xpath("//li[contains(text(), 'Test')]")
-                            except NoSuchElementException:
-                                logger.error("No one should see this... Ever.")
-                            else:
-                                # runs complete test
-                                completeMasteryTest()
-                        else:
-                            # runs complete prac
-                            completePractice()
-                    else:
-                        # runs complete tut
-                        completeTut()
-        except:
-            logger.debug("not menu type 2")
-            pass
+# def openCourseType2():  
+#     logger.debug("in CourseType2")
+#     # find/open started unit, then if one cant be found find/open new unit
+#     sortInProgress = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-inprogress']"))
+#     sortNotMastered = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-completed-not-mastered']"))
+#     sortNotStarted = WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[@id='tab-notstarted']"))
+#     # we are currently above the array
+#     sortArray = [sortInProgress, sortNotMastered,sortNotStarted]
+#     sleep(1)
+#     for sort in sortArray:
+#         sort.click() # this one
+#         logger.debug("sorting")
+#         try:
+#             # looks for all activities
+#             activityArray = driver.find_elements_by_xpath("//span[@class='ico oneSheetIco']")
+#             for activity in activityArray:
+#                 try: 
+#                     # scrolls to possible activity
+#                     driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", activity)
+#                     activity.click()
+#                     # this is the click?
+#                     # yeaj its not this one lol good luck
+#                     # i think but then again im realizing term says sort.click() nut like that was working fine so idk
+#                     # cool im retarded 
+#                     # like it errors but then still opens it, but when i used the other kind of click. it just didnt open
+                    
+#                 except (ElementClickInterceptedException, ElementNotInteractableException, NoSuchElementException, TimeoutException):
+#                     # if activity can't open it tries the next one in the array
+#                     pass
+#                 else:
+#                     logger.debug("activity opened")
+#                     # WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//body[@class='player-body']"))).click()
+#                     try:
+#                         # sees if prgm is in Tut
+#                         WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//h1//thspan[contains(text(), 'Tutorial')]"))
+#                     except (NoSuchElementException, TimeoutException):
+#                         try:
+#                             # checks if prgm is in Practice
+#                             WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[contains(text(), 'Practice')]"))
+#                         except (NoSuchElementException, TimeoutException):
+#                             try:
+#                                 # checks if prgm is in Test
+#                                 WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//li[contains(text(), 'Test')]"))
+#                             except (NoSuchElementException, TimeoutException):
+#                                 logger.error("No one should see this... Ever.")
+#                             else:
+#                                 # runs complete test
+#                                 completeMasteryTest()
+#                         else:
+#                             # runs complete prac
+#                             completePractice()
+#                     else:
+#                         # runs complete tut
+#                         logger.debug("fucking how, what")
+#                         completeTut()
+#         except:
+#             logger.debug("not menu type 2")
+#             pass
 
 def openTut():
     try:
@@ -409,37 +431,39 @@ def openTut():
 
 
 def completeTut():
-    try:
-        # is navNext disabled?
-        WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//header[@class='tutorial-viewport-header']"))
-        driver.switch_to.parent_frame()
-        # driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")
-        WebDriverWait(driver, 1).until(lambda driver: driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")).click()
-        logger.debug('navNext is not disabled, moving to next')
-        completeTut()
+    WebDriverWait(driver, 10).until(lambda driver: driver.find_element_by_xpath("//header[@class='tutorial-viewport-header']"))
+    while True:
+        try:
+            # is navNext disabled?
+            driver.switch_to.parent_frame()
+            # driver.find_element_by_xpath("//button[@class='tutorial-nav-next']")
+            WebDriverWait(driver, 1).until(expected_conditions.element_to_be_clickable((By.XPATH, "//button[@class='tutorial-nav-next']"))).click()
+            logger.debug('navNext is not disabled, moving to next')
+            completeTut()
 
-    except:
-        logger.debug('navNext is disabled, work to be done..')
+        except:
+            logger.debug('navNext is disabled, work to be done..')
 
-        isFRQ()
+            isFRQ()
 
-        isMPC()
+            isMPC()
 
-        isMultipageSlide()
+            isMultipageSlide()
 
-        isAnswerBtn()
+            isAnswerBtn()
 
-        isAnswerBtn2()
+            isAnswerBtn2()
 
-        isAnswerBtn3()
+            isAnswerBtn3()
 
-        isAnswerBtn4()
+            isAnswerBtn4()
 
-        isAnswerBtn5()
+            isAnswerBtn5()
 
-        isOrderedProblemChoice()
+            isOrderedProblemChoice()
 
-        isFinished()
+            isFinished()
+
 
 def openPractice():
     try:
@@ -1175,7 +1199,7 @@ def isFinished():
         currentNUM = int(currentPage.text)
         totalNUM = int(totalPage.text)
         print(str(currentNUM)+" of "+str(totalNUM))
-    except (NoSuchElementException, ValueError, TimeoutError):
+    except (NoSuchElementException, ValueError, TimeoutException):
         logger.debug("refreshing")
         driver.refresh()
         logger.debug("refreshed")
