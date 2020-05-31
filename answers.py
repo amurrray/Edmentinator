@@ -44,7 +44,7 @@ def query(question, questionType, specificness=95):
 
     example call: print(query('who was thomas jefferson')['answer'])
     '''
-    syncDB()
+    # syncDB()
     answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
 
     # generate list of all known questions

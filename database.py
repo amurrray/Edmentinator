@@ -123,6 +123,26 @@ def checkIfSyncedUser():
         if sel.lower() != 'n':
             syncDB()
 
+def sanitize(inputstr):
+    ''' removes annoying chars from a string '''
+    sanitized = inputstr
+    badstrings = [
+        '\n',
+        '\t',
+        '\r',
+        '. ',
+        '? ',
+        '\'',
+        '’',
+        "'",
+        '"',
+        '—'
+    ]
+    for badstr in badstrings:
+        if badstr in sanitized:
+            sanitized = sanitized.replace(badstr, '')
+    return sanitized
+
 def main():
     args = parser.parse_args()
 

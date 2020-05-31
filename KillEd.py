@@ -24,7 +24,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 import answers
 import complimentinator
-from database import syncDB
+from database import syncDB, sanitize
 
 # setup logging
 logging.basicConfig(level=logging.DEBUG, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
@@ -779,55 +779,70 @@ def completeMasteryTest():
         questionContainer = wholePageSoup.find('div', {'class': 'questions-container'})
         questionSoup = BeautifulSoup(str(questionContainer), 'lxml')
 
-        possibleQuestionElements = []
-        possibleQuestionElements.extend(questionSoup.findAll('div', {'class': 'stem'}))
-        possibleQuestionElements.extend(questionSoup.findAll('div', {'class': 'prompt visible'}))
-        possibleQuestions = []
-
-        for element in possibleQuestionElements:
-            if element.text.count('?') != 0 or element.text.lower().count('which') != 0 or element.text.lower().count('what') != 0 or element.text.lower().count('who') or element.text.lower().count('match') or element.text.lower().count('select') != 0 or element.text.lower().count('decide') != 0:
-                possibleQuestions.append(element.text)
-
-        question = ""
-        for possibleQuestion in possibleQuestions: # if the question is spliced up, this should fix it (?)
-            question += possibleQuestion
-        
-        # remove weird nonsense from question
-        question = question.replace('Select the correct answer.', '')
-        question = question.replace('Select all the correct answers.', '')
-        question = question.replace('\n', '').replace('\r', '').replace('\t', '').lstrip().rstrip()
-        logger.debug(question)
-
-        if len(possibleQuestions) == 0:
-            logger.error("UNKOWN QUESTION TYPE")
-
+        # figure out which type of question we're in
         if len(questionSoup.findAll('div', {'class': 'draggable-item'})) != 0: # if its a drag and drop
             logger.error('DRAG AND DROP IS WIP')
-        elif len(questionSoup.findAll('div', {'class': 'inlinechoice-select'})) != 0: # if its a dropdown
+            draggablesText = questionSoup.findAll('li', {'class': 'draggable-container'})
+            draggablesElement = driver.find_elements_by_xpath("//li[@class='draggable-container']")
+            for i in draggablesText:
+                draggablesText[draggablesText.index(i)] = sanitize(i.text)
+            logger.debug(f'draggables: {draggablesText}')
+
+            dropLocationsElement = driver.find_elements_by_xpath("//ul[@class='droppable-wrapper']")
+            dropLocationsText = questionSoup.findAll('ul', {'class': 'droppable-wrapper'})
+            for i in dropLocationsText:
+                dropLocationsText[dropLocationsText.index(i)] = sanitize(i.text)
+
+        elif len(questionSoup.findAll('select', {'class': 'inlinechoice-select'})) != 0: # if its a dropdown
             logger.debug("dropdown format")
             questionType = 'dropdown'
+            question = sanitize(questionSoup.find('div', 'inline-choice-content interactive-content-block').text)
             query = answers.query(question, questionType)
 
             foundAnswer = query['answer']
-            for answer in foundAnswer:
-                logger.debug("dropwdown question")
-                dropdownboxArray = driver.find_elements_by_xpath("//select[@class='inlinechoice-select']")
-                i = 0
-                for dropdown in dropdownboxArray:
-                    dropdown.click()
-                    dropdown.send_keys(foundAnswer[i])
-                    dropdown.send_keys(Keys.ENTER)
-                    i += 1
+
+            dropdownboxArray = driver.find_elements_by_xpath("//select[@class='inlinechoice-select']")
+            i = 0
+            for dropdown in dropdownboxArray:
+                dropdown.click()
+                dropdown.send_keys(foundAnswer[i])
+                dropdown.send_keys(Keys.ENTER)
+                i += 1
 
         # multiple choice stuff
         else:
+            # find the multiple choice question
+
+            possibleQuestionElements = []
+            possibleQuestionElements.extend(questionSoup.findAll('div', {'class': 'stem'}))
+            # possibleQuestionElements.extend(questionSoup.findAll('div', {'class': 'prompt visible'}))
+            possibleQuestions = []
+
+            for element in possibleQuestionElements:
+                if element.text.count('?') != 0 or element.text.lower().count('which') != 0 or element.text.lower().count('what') != 0 or element.text.lower().count('who') or element.text.lower().count('match') or element.text.lower().count('select') != 0 or element.text.lower().count('decide') != 0:
+                    possibleQuestions.append(element.text)
+
+            question = ""
+            # if the question is spliced up, this should fix it (?)
+            for possibleQuestion in possibleQuestions:
+                question += possibleQuestion
+
+            # remove weird nonsense from question
+            question = question.replace('Select the correct answer.', '')
+            question = question.replace('Select all the correct answers.', '')
+            question = sanitize(question)
+            logger.debug(question)
+            
+            # answer the question
+
             # multichoice format, most classes
             if len(questionSoup.findAll('div', {'class': 'multichoice-choice'})) != 0:
                 logger.debug('multichoice format')
                 answerChoicesElement = driver.find_elements_by_class_name('multichoice-choice')
                 answerChoicesText = questionSoup.findAll('div', {'class': 'multichoice-choice'})
                 for i in answerChoicesText:
-                    answerChoicesText[answerChoicesText.index(i)] = BeautifulSoup(str(i), 'lxml').find('div', {'class': 'content-inner hover-highlight'}).text
+                    # answerChoicesText[answerChoicesText.index(i)] = BeautifulSoup(str(i), 'lxml').find('div', {'class': 'content-inner hover-highlight'}).text
+                    answerChoicesText[answerChoicesText.index(i)] = sanitize(i.text)
                 logger.debug('answer choices '+ str(answerChoicesText))
 
             # if its a multiresponse (checkboxes)
@@ -836,7 +851,7 @@ def completeMasteryTest():
                 answerChoicesElement = driver.find_elements_by_class_name('multiresponse-choice')
                 answerChoicesText = questionSoup.findAll('li', {'class': 'multiresponse-choice'})
                 for i in answerChoicesText:
-                    answerChoicesText[answerChoicesText.index(i)] = i.text.replace('\n', '').replace('\r', '').replace('\t', '').lstrip().rstrip()
+                    answerChoicesText[answerChoicesText.index(i)] = sanitize(i.text)
                 logger.debug('answer choices '+ str(answerChoicesText))
 
             # ht interaction format, usually for english
@@ -845,14 +860,13 @@ def completeMasteryTest():
                 answerChoicesElement = driver.find_elements_by_class_name('ht-interaction')
                 answerChoicesText = questionSoup.findAll('span', {'class': 'ht-interaction'})
                 for i in answerChoicesText:
-                    answerChoicesText[answerChoicesText.index(i)] = i.text.replace(' ', '+').replace("'", "\'").replace('"', '\"').replace('’', "\'")
+                    answerChoicesText[answerChoicesText.index(i)] = sanitize(i.text)
                 logger.debug('answer choices ' + str(answerChoicesText))
 
             # get the answer to the question then find its closest match out of our choices
             for answer in answers.query(question, 'mcq')['answer']:
                 answerCorrect = process.extractOne(answer, answerChoicesText)[0]
                 answerChoicesElement[answerChoicesText.index(answerCorrect)].click()
-                # WebDriverWait(driver, 4).until(expected_conditions.element_to_be_clickable(answerChoicesElement[answerChoicesText.index(answerCorrect)]))
                 logger.debug(f'answer: {answerCorrect}')
 
         sleep(.5)
