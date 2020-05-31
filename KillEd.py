@@ -51,7 +51,6 @@ except:
     driver = webdriver.Chrome(CHROME_PATH, options=CHROME_OPTIONS)
     logger.debug('ChromeDriverManager failed, using local binary')
 actions = ActionChains(driver)
-assignments = None  # placeholder because i bad code flow
 
 
 class TableThings:
@@ -589,7 +588,6 @@ def completePractice():
                                 driver.find_element_by_xpath("//li[@class='droppable ui-droppable']")
                             except NoSuchElementException:
                                 logger.debug("no drops found")
-                                pass
                             else:
                                 dropArray = driver.find_element_by_xpath("//li[@class='droppable ui-droppable']")
                         else:

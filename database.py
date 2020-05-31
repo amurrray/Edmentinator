@@ -17,7 +17,7 @@ logger.setLevel(logging.INFO)
 
 # json credentials
 scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-credentials = ServiceAccountCredentials.from_json_keyfile_name(str(Path(__file__).resolve().parents[0]) + 'creds.json', scope)
+credentials = ServiceAccountCredentials.from_json_keyfile_name(str(Path(__file__).resolve().parents[0]) + '/creds.json', scope)
 gc = gspread.authorize(credentials)
 
 sheet = gc.open_by_key('1n5bKrLVK1VbQ-50wzCIGxH8wWloVQZAwLU7RSCnLsko').sheet1
