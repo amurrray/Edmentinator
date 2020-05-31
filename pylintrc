@@ -60,10 +60,11 @@ disable=
     missing-docstring,
     protected-access,
     too-few-public-methods,
-    # handled by black
     format,
     bare-except,
-    anomalous-backslash-in-string
+    anomalous-backslash-in-string,
+    singleton-comparison,
+    logging-format-interpolation
 
     
 

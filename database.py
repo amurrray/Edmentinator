@@ -7,7 +7,6 @@ from pathlib import Path
 from shutil import copyfile
 
 import gspread
-import requests
 from oauth2client.service_account import ServiceAccountCredentials
 from printy import inputy, printy
 

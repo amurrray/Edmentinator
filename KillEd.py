@@ -543,7 +543,6 @@ def completePractice():
                             driver.find_element_by_xpath("//input[@spellcheck='false']")
                         except NoSuchElementException:
                             logger.debug("not frq")
-                            pass
                         else:
                             textbox = driver.find_element_by_xpath("//input[@spellcheck='false']")
                             textbox.click()
@@ -553,13 +552,8 @@ def completePractice():
                             subBtnArray = driver.find_elements_by_xpath("//a[@class='player-button worksheets-submit']")
                             for subBtn in subBtnArray:        
                                 # cycles through subBtns
-                                try:
-                                    driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", subBtn)
-                                    subBtn.click()
-                                except:
-                                    pass
-                                else:
-                                    break
+                                driver.execute_script("arguments[0].scrollIntoView({behavior: 'smooth', block: 'center' });", subBtn)
+                                subBtn.click()
                             try:
                                 # if the answers correct (or its second failed attemt), next btn is shown and can be clicked
                                 nextBtnArray = driver.find_elements_by_xpath("//a[@class='player-button worksheets-next']")
@@ -753,7 +747,7 @@ def completePractice():
             # finds/clicks okay btn
             okBtnElm = WebDriverWait(driver, 10).until(driver.find_element_by_xpath("//span[contains(text(), 'OK')]"))
             driver.execute_script("arguments[0].click()", okBtnElm)
-            break 
+            break
 
 def openMasteryTest():
     try:
@@ -928,7 +922,6 @@ def isFRQ():
                 driver.execute_script("arguments[0].click()", showAns)
     except:
         logger.debug("No show answer btns")
-        pass
     try:
         logger.debug("looking for btn")
         driver.find_element_by_xpath("//button[@class='btn buttonDone' and @style='']")
