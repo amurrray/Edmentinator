@@ -16,7 +16,7 @@ from pathlib import Path
 from fuzzywuzzy import process
 from printy import inputy
 
-from database import syncDB
+from database import syncDB, sanitize
 
 # setup logging
 logging.basicConfig(level=logging.INFO, format=('%(asctime)s %(levelname)s %(name)s | %(message)s'))
@@ -58,10 +58,8 @@ def query(question, questionType, draggables=None, specificness=95):
 
     if foundQuestion[1] < specificness: # if the found question wasnt close enough to our question, get the answer to our question
         # generate question url so that the user can get datadome key
+        question = sanitize(question)
         question = question.replace(' ', '+')
-        question = question.replace("'", "\'")
-        question = question.replace('"', '\"')
-        question = question.replace('’', "\'")
         questionUrl = f'{BASE_URL}app/ask?entry=top&q={question}'
 
         # make the request look like it came from a user browser EDIT: it now does come from a fkin user browser
@@ -90,7 +88,7 @@ def query(question, questionType, draggables=None, specificness=95):
             pickle.dump(answersDB, open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'wb'))
             return {'question': question, 'questionType': questionType, 'answer': answersBrainly}
         else:
-            return query(question, questionType)
+            return query(question, questionType, draggables)
 
     else:
         for answer in answersDB:

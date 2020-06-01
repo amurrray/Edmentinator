@@ -771,6 +771,7 @@ def completeMasteryTest():
     questionCountArray = driver.find_elements_by_xpath("//li[@class='drop-menu-item']")
     questionCount = len(questionCountArray) + 1
     print("Questions: " + str(questionCount))
+    sleep(1)
     for _ in range(questionCount):
         WebDriverWait(driver, 4).until(lambda driver: driver.find_element_by_xpath("//div[@class='questions-container']"))
 
