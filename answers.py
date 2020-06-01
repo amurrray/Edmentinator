@@ -32,7 +32,7 @@ try:
 except FileNotFoundError:
     pickle.dump([], open('answers.pkl', 'wb'))
 
-def query(question, questionType, specificness=95):
+def query(question, questionType, draggables=None, specificness=95):
     '''
     returns an object in the format {'question': question, 'answer': answer}
     if the answer is not found in the database, manual input of the answer
@@ -44,7 +44,6 @@ def query(question, questionType, specificness=95):
 
     example call: print(query('who was thomas jefferson')['answer'])
     '''
-    # syncDB()
     answersDB = pickle.load(open(str(Path(__file__).resolve().parents[0]) + '/answers.pkl', 'rb'))
 
     # generate list of all known questions
@@ -52,7 +51,6 @@ def query(question, questionType, specificness=95):
     knownQuestions = []  # perhaps implement stop word filtering later on: https://en.wikipedia.org/wiki/Stop_words
     for answer in answersDB:
         knownQuestions.append(answer['question'])
-    logger.debug(f'all known questions: {str(knownQuestions)}')
 
     # find the closest match to our question
     foundQuestion = process.extractOne(question, knownQuestions)
@@ -69,15 +67,22 @@ def query(question, questionType, specificness=95):
         # make the request look like it came from a user browser EDIT: it now does come from a fkin user browser
         print(questionUrl)
         print('\n')
-
         answersBrainly = []
-        moreAns = True
-        while moreAns:
-            answerCurrent = inputy(f'[g]\[press enter when finished]@ [n]answer #{len(answersBrainly)}: ')
-            if answerCurrent == '':
-                moreAns = False
-            else:
+        
+        if questionType == 'drag':
+            for drag in draggables:
+                match = inputy(f'[g]\[press enter when finished]@ [n] {drag} matches to : ')
+                answerCurrent = {'drag': drag, 'match': match}
                 answersBrainly.append(answerCurrent)
+            
+        else: # most question types
+            moreAns = True
+            while moreAns:
+                answerCurrent = inputy(f'[g]\[press enter when finished]@ [n]answer #{len(answersBrainly)}: ')
+                if answerCurrent == '':
+                    moreAns = False
+                else:
+                    answersBrainly.append(answerCurrent)
 
         confirm = inputy(f'CONFIRM that the answers TO [c]{question}@ ARE [n]{str(answersBrainly)}@? \[[n]Y@/[r]n@] ')
         if confirm.lower() != 'n':

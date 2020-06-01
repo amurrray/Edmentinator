@@ -781,31 +781,55 @@ def completeMasteryTest():
 
         # figure out which type of question we're in
         if len(questionSoup.findAll('div', {'class': 'draggable-item'})) != 0: # if its a drag and drop
-            logger.error('DRAG AND DROP IS WIP')
+            logger.debug('drag and drop format')
+            questionType = 'drag'
+            question = sanitize(questionSoup.find('div', {'class': 'stem'}).text)
+
+            # grab the draggables
             draggablesText = questionSoup.findAll('li', {'class': 'draggable-container'})
             draggablesElement = driver.find_elements_by_xpath("//li[@class='draggable-container']")
             for i in draggablesText:
                 draggablesText[draggablesText.index(i)] = sanitize(i.text)
             logger.debug(f'draggables: {draggablesText}')
 
-            dropLocationsElement = driver.find_elements_by_xpath("//ul[@class='droppable-wrapper']")
+            # grab the locations the drags can go to
+            dropLocationsElement = driver.find_elements_by_xpath("//li[@class='droppable ui-droppable']")
             dropLocationsText = questionSoup.findAll('ul', {'class': 'droppable-wrapper'})
             for i in dropLocationsText:
                 dropLocationsText[dropLocationsText.index(i)] = sanitize(i.text)
 
+            answerFound = answers.query(question, questionType, draggablesText)
+
+            for answer in answerFound:
+                draggableToMove = draggablesElement[draggablesText.index(answer['drag'])]
+                actions.drag_and_drop(draggableToMove, dropLocationsElement[dropLocationsText.index(answer['match'])])
+
+        elif len(questionSoup.findAll('div', {'class': 'text-entry'})) != 0: # text entry format
+            logger.debug('text entry format')
+            questionType = 'text'
+            question = sanitize(questionSoup.find('div', {'class': 'stem'}).text)
+
+            inputBox = driver.find_element_by_xpath("//input[@class='textentry-input']")
+            
+            answerFound = answers.query(question, questionType)['answer'][0]
+            logger.debug(f'text ans: {answerFound}')
+            inputBox.click()
+            inputBox.send_keys(answerFound)
+
         elif len(questionSoup.findAll('select', {'class': 'inlinechoice-select'})) != 0: # if its a dropdown
             logger.debug("dropdown format")
             questionType = 'dropdown'
-            question = sanitize(questionSoup.find('div', 'inline-choice-content interactive-content-block').text)
+            question = sanitize(questionSoup.find('div', {'class': 'inline-choice-content interactive-content-block'}).text)
             query = answers.query(question, questionType)
 
-            foundAnswer = query['answer']
+            answerFound = query['answer']
 
             dropdownboxArray = driver.find_elements_by_xpath("//select[@class='inlinechoice-select']")
             i = 0
+            logger.debug(f'found {len(dropdownboxArray)} dropdowns')
             for dropdown in dropdownboxArray:
                 dropdown.click()
-                dropdown.send_keys(foundAnswer[i])
+                dropdown.send_keys(answerFound[i])
                 dropdown.send_keys(Keys.ENTER)
                 i += 1
 
@@ -841,7 +865,6 @@ def completeMasteryTest():
                 answerChoicesElement = driver.find_elements_by_class_name('multichoice-choice')
                 answerChoicesText = questionSoup.findAll('div', {'class': 'multichoice-choice'})
                 for i in answerChoicesText:
-                    # answerChoicesText[answerChoicesText.index(i)] = BeautifulSoup(str(i), 'lxml').find('div', {'class': 'content-inner hover-highlight'}).text
                     answerChoicesText[answerChoicesText.index(i)] = sanitize(i.text)
                 logger.debug('answer choices '+ str(answerChoicesText))
 
@@ -875,6 +898,7 @@ def completeMasteryTest():
         sleep(1)
 
     logger.debug("done with test")
+    syncDB()
     okBtn = driver.find_element_by_xpath("//span[@class='ui-button-text' and contains(text(),'OK')]")
     okBtn.click()
     WebDriverWait(driver, 10).until(expected_conditions.element_to_be_clickable((By.XPATH, "//button[@type='button' and contains(text(),'Close and return to your activities')]"))).click()

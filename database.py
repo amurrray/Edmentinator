@@ -124,7 +124,11 @@ def checkIfSyncedUser():
             syncDB()
 
 def sanitize(inputstr):
-    ''' removes annoying chars from a string '''
+    '''
+    removes annoying chars from a string 
+    https://gist.github.com/dustyfresh/10d4e260499612c055f91f824ebd8a64
+    '''
+
     sanitized = inputstr
     badstrings = [
         '\n',
@@ -136,7 +140,11 @@ def sanitize(inputstr):
         '’',
         "'",
         '"',
-        '—'
+        '—',
+        '→',
+        '⇌',
+        '%',
+        '°'
     ]
     for badstr in badstrings:
         if badstr in sanitized:
