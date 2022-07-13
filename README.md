@@ -9,6 +9,13 @@ Edmentum is the makeshift chosen platform for LCPS 'Distanced Learning' in respo
 ## what do?
 The edment-inator uses selenium and 'scraped' brainly answers to speedily answer all questions in Edmentum courses. The goal of the bot is to make Edmentum as easy, and as time efficient as possible by having you not do it! I'll probably write more here later but only if I remember. I'm gonna take a nap.
 
+## how do?
+1. Install python
+2. Clone repository 
+3. Edit MY_USERNAME and MY_PASSWORD in `secrets.example.py` and rename to `secrets.py`
+4. Open cmd/terminal in repository
+5. Run `pip install -r requirements.txt`
+6. Run `python KillEd.py`
 ---
 ## give me doof
 ![da doof](https://i.imgur.com/boNLDMB.png)
