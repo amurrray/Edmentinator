@@ -1,0 +1,12 @@
+{ // you have to make a Oauth application with access to a Google sheet and then put the account credential JSON file Google Cloud Project provides you here
+  "type": "",
+  "project_id": "",
+  "private_key_id": "",
+  "private_key": "",
+  "client_email": "",
+  "client_id": "",
+  "auth_uri": "",
+  "token_uri": "",
+  "auth_provider_x509_cert_url": "",
+  "client_x509_cert_url": ""
+}
